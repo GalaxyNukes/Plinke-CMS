@@ -1,0 +1,33 @@
+{
+  "name": "noa-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@portabletext/react": "^3.1.0",
+    "@sanity/color-input": "^4.0.3",
+    "@sanity/image-url": "^1.0.2",
+    "@sanity/vision": "^3.57.0",
+    "framer-motion": "^11.11.0",
+    "lucide-react": "^0.453.0",
+    "next": "14.2.15",
+    "next-sanity": "^9.8.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sanity": "^3.57.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.8.0",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14",
+    "typescript": "^5.6.3"
+  }
+}
