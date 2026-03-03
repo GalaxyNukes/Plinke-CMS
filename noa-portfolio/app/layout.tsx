@@ -13,6 +13,7 @@ export const revalidate = 60;
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   let themeStyle = "";
   try {
+    if (!client) throw new Error("CMS not connected");
     const settings = await client.fetch(siteSettingsQuery);
     if (settings?.theme) {
       const t = settings.theme;

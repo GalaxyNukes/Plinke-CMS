@@ -60,8 +60,8 @@ export default defineConfig({
   name: "noa-portfolio",
   title: "Noa Plinke — Portfolio",
 
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET!,
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "placeholder",
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
 
   basePath: "/studio",
 

@@ -11,6 +11,7 @@ export default async function HomePage() {
   let settings = null;
 
   try {
+    if (!client) throw new Error("CMS not connected");
     [page, settings] = await Promise.all([
       client.fetch(pageQuery, { slug: "home" }),
       client.fetch(siteSettingsQuery),
