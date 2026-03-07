@@ -13,6 +13,7 @@ import aboutTimeline from "./blocks/aboutTimeline";
 import videoShowreel from "./blocks/videoShowreel";
 import testimonials from "./blocks/testimonials";
 import richTextBlock from "./blocks/richTextBlock";
+import contactBlock from "./blocks/contactBlock";
 
 export const schemaTypes = [
   // Documents
@@ -30,4 +31,5 @@ export const schemaTypes = [
   videoShowreel,
   testimonials,
   richTextBlock,
+  contactBlock,
 ];
