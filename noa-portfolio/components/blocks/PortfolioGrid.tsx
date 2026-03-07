@@ -82,7 +82,7 @@ export function PortfolioGrid(props: any) {
       {/* Filters — all same pill style */}
       {showFilters && (
         <ScrollReveal delay={0.1}>
-          <div className="flex flex-wrap items-center gap-2.5 mb-10">
+          <div className="flex flex-wrap items-center gap-2.5 mb-10 relative z-30">
             {/* All */}
             <button
               onClick={() => setActive("All")}
@@ -115,7 +115,7 @@ export function PortfolioGrid(props: any) {
 
                 {dropdownOpen && (
                   <div
-                    className="absolute top-full left-0 mt-2 min-w-[200px] rounded-xl overflow-hidden shadow-xl z-20 border py-1"
+                    className="absolute top-full left-0 mt-2 min-w-[200px] rounded-xl overflow-hidden shadow-xl z-50 border py-1"
                     style={{
                       background: "var(--bg-card)",
                       borderColor: "rgba(0,0,0,0.08)",
