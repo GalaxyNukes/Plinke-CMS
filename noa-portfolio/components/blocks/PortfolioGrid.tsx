@@ -81,8 +81,8 @@ export function PortfolioGrid(props: any) {
 
       {/* Filters — all same pill style */}
       {showFilters && (
-        <ScrollReveal delay={0.1}>
-          <div className="flex flex-wrap items-center gap-2.5 mb-10 relative z-30">
+        <div className="relative z-30 mb-10">
+          <div className="flex flex-wrap items-center gap-2.5">
             {/* All */}
             <button
               onClick={() => setActive("All")}
@@ -177,7 +177,7 @@ export function PortfolioGrid(props: any) {
               </button>
             ))}
           </div>
-        </ScrollReveal>
+        </div>
       )}
 
       {/* Empty state */}
