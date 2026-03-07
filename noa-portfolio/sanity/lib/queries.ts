@@ -38,6 +38,7 @@ export const pageQuery = groq`
               asset-> { _id, url, mimeType }
             }
           },
+          projectType,
           categories,
           year,
           projectLink,
@@ -48,14 +49,18 @@ export const pageQuery = groq`
         ...,
         jams[]->{
           _id,
-          jamName,
           gameTitle,
+          description,
           thumbnail,
+          genre,
+          platform,
+          role,
+          jamName,
           placement,
           date,
           teamSize,
-          description,
-          playLink
+          playLink,
+          videoLink
         }
       },
       _type == "testimonials" => {
@@ -112,6 +117,7 @@ export const allProjectsQuery = groq`
         asset-> { _id, url, mimeType }
       }
     },
+    projectType,
     categories,
     year,
     projectLink,
@@ -133,6 +139,7 @@ export const projectBySlugQuery = groq`
         asset-> { _id, url, mimeType }
       }
     },
+    projectType,
     categories,
     year,
     projectLink,
@@ -154,13 +161,17 @@ export const allProjectSlugsQuery = groq`
 export const allGameJamsQuery = groq`
   *[_type == "gameJam"] | order(date desc){
     _id,
-    jamName,
     gameTitle,
+    description,
     thumbnail,
+    genre,
+    platform,
+    role,
+    jamName,
     placement,
     date,
     teamSize,
-    description,
-    playLink
+    playLink,
+    videoLink
   }
 `;

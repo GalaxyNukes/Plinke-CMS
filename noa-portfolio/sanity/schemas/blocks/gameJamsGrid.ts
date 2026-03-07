@@ -2,7 +2,7 @@ import { defineType, defineField } from "sanity";
 
 export default defineType({
   name: "gameJamsGrid",
-  title: "Game Jams Grid",
+  title: "Games Grid",
   type: "object",
   icon: () => "🎮",
   fields: [
@@ -10,20 +10,20 @@ export default defineType({
       name: "sectionTitle",
       title: "Section Title",
       type: "string",
-      initialValue: "Game Jams",
+      initialValue: "Games",
     }),
     defineField({
       name: "jams",
-      title: "Game Jams",
+      title: "Games",
       type: "array",
       of: [{ type: "reference", to: [{ type: "gameJam" }] }],
-      description: "Select which game jams to show (drag to reorder)",
+      description: "Select which games to show (drag to reorder)",
     }),
   ],
   preview: {
     select: { title: "sectionTitle" },
     prepare({ title }) {
-      return { title: title || "Game Jams", subtitle: "🎮 Jam Entries" };
+      return { title: title || "Games", subtitle: "🎮 Games Grid" };
     },
   },
 });

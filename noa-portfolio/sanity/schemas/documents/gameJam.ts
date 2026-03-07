@@ -2,22 +2,21 @@ import { defineType, defineField } from "sanity";
 
 export default defineType({
   name: "gameJam",
-  title: "Game Jam",
+  title: "Game",
   type: "document",
   icon: () => "🎮",
   fields: [
-    defineField({
-      name: "jamName",
-      title: "Jam Name",
-      type: "string",
-      description: "e.g., Ludum Dare 56, GMTK Jam 2024",
-      validation: (Rule) => Rule.required(),
-    }),
     defineField({
       name: "gameTitle",
       title: "Game Title",
       type: "string",
       validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: "description",
+      title: "Short Description",
+      type: "text",
+      rows: 3,
     }),
     defineField({
       name: "thumbnail",
@@ -29,16 +28,40 @@ export default defineType({
       ],
     }),
     defineField({
+      name: "genre",
+      title: "Genre / Type",
+      type: "string",
+      description: "e.g., Action, Puzzle, Platformer, RPG",
+    }),
+    defineField({
+      name: "platform",
+      title: "Platform",
+      type: "string",
+      description: "e.g., PC, Web, Mobile, Console",
+    }),
+    defineField({
+      name: "role",
+      title: "Your Role",
+      type: "string",
+      description: "e.g., Gameplay Animator, Lead Animator, Solo Developer",
+    }),
+    defineField({
+      name: "jamName",
+      title: "Game Jam Name (optional)",
+      type: "string",
+      description: "If this was made for a game jam, e.g., Ludum Dare 56, GMTK Jam 2024",
+    }),
+    defineField({
       name: "placement",
-      title: "Placement / Result",
+      title: "Award / Placement (optional)",
       type: "string",
       description: 'e.g., "Top 5%", "Best Animation", "Community Pick"',
     }),
     defineField({
       name: "date",
-      title: "Date",
+      title: "Date / Year",
       type: "string",
-      description: "e.g., Oct 2024",
+      description: "e.g., Oct 2024, 2023",
     }),
     defineField({
       name: "teamSize",
@@ -47,19 +70,26 @@ export default defineType({
       description: 'e.g., "Solo", "3", "4"',
     }),
     defineField({
-      name: "description",
-      title: "Short Description",
-      type: "text",
-      rows: 3,
+      name: "playLink",
+      title: "Play / Download Link",
+      type: "url",
+      description: "Link to play or download the game (e.g., itch.io, Steam)",
     }),
     defineField({
-      name: "playLink",
-      title: "Play Link",
+      name: "videoLink",
+      title: "Trailer / Gameplay Video (optional)",
       type: "url",
-      description: "Link to play the game (e.g., itch.io)",
+      description: "YouTube or Vimeo link to gameplay footage or trailer",
     }),
   ],
   preview: {
-    select: { title: "gameTitle", subtitle: "jamName", media: "thumbnail" },
+    select: { title: "gameTitle", subtitle: "jamName", media: "thumbnail", role: "role" },
+    prepare({ title, subtitle, media, role }) {
+      return {
+        title,
+        subtitle: subtitle ? `${subtitle}${role ? " · " + role : ""}` : role || "",
+        media,
+      };
+    },
   },
 });

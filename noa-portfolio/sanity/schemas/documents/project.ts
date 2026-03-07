@@ -50,6 +50,20 @@ export default defineType({
       ],
     }),
     defineField({
+      name: "projectType",
+      title: "Type",
+      type: "string",
+      options: {
+        list: [
+          { title: "Project", value: "Project" },
+          { title: "Demoreel", value: "Demoreel" },
+        ],
+        layout: "radio",
+      },
+      initialValue: "Project",
+      description: "Is this a full project or a demoreel?",
+    }),
+    defineField({
       name: "categories",
       title: "Categories",
       type: "array",

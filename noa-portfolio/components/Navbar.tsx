@@ -12,7 +12,7 @@ export function Navbar({ settings }: NavbarProps) {
   const navLinks = settings?.navLinks || [
     { label: "Home", href: "#home" },
     { label: "Portfolio", href: "#portfolio" },
-    { label: "Game Jams", href: "#gamejams" },
+    { label: "Games", href: "#games" },
     { label: "About", href: "#about" },
     { label: "Contact", href: "#contact" },
   ];
