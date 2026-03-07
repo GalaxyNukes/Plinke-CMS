@@ -42,17 +42,20 @@ export function HeroBanner(props: any) {
     heroVideo,
     secondaryThumbnail,
     showPlayBadge = true,
+    autoplayVideo = false,
     tags = [],
     ctaLabel = "SEND ME AN EMAIL",
     ctaLink = "#",
   } = props;
 
-  const [videoState, setVideoState] = useState<"idle" | "small" | "large">("idle");
-  const videoRef = useRef<HTMLVideoElement>(null);
-
   const videoUrl = getVideoUrl(heroVideo);
   const hasVideo = !!videoUrl;
   const isEmbed = hasVideo && isEmbedUrl(videoUrl!);
+
+  const [videoState, setVideoState] = useState<"idle" | "small" | "large">(
+    hasVideo && autoplayVideo ? "small" : "idle"
+  );
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const handlePlayClick = useCallback(() => {
     if (!hasVideo) return;
@@ -118,8 +121,9 @@ export function HeroBanner(props: any) {
         ref={videoRef}
         src={videoUrl}
         className={classes}
-        controls={expanded}
-        muted={false}
+        controls
+        muted={autoplayVideo}
+        autoPlay={autoplayVideo || videoState !== "idle"}
         playsInline
         loop
       />
@@ -143,15 +147,18 @@ export function HeroBanner(props: any) {
           <div className="relative w-full max-w-[1100px] aspect-video rounded-card overflow-hidden">
             {renderVideoPlayer(true)}
 
-            {/* Minimize overlay on hover */}
-            <div
-              className="video-overlay"
+            {/* Minimize button — small corner button, doesn't block video */}
+            <button
               onClick={handleMinimize}
+              className="absolute top-3 left-3 z-[15] flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold uppercase tracking-wide text-white transition-all hover:scale-105"
+              style={{
+                background: "rgba(0,0,0,0.5)",
+                backdropFilter: "blur(10px)",
+                border: "1px solid rgba(255,255,255,0.2)",
+              }}
             >
-              <span className="video-overlay-label">
-                <Minimize2 size={16} /> Minimize
-              </span>
-            </div>
+              <Minimize2 size={14} /> Minimize
+            </button>
           </div>
 
           {/* Close button */}
@@ -240,15 +247,18 @@ export function HeroBanner(props: any) {
                 <div className="w-60 h-40 md:w-72 md:h-48 rounded-[14px] overflow-hidden border-2 border-white/20 shadow-2xl relative">
                   {renderVideoPlayer(false)}
 
-                  {/* Enlarge overlay on hover */}
-                  <div
-                    className="video-overlay"
+                  {/* Enlarge button — small corner button, doesn't block video */}
+                  <button
                     onClick={handleEnlarge}
+                    className="absolute top-2 right-2 z-[15] flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-wide text-white transition-all hover:scale-105"
+                    style={{
+                      background: "rgba(0,0,0,0.5)",
+                      backdropFilter: "blur(10px)",
+                      border: "1px solid rgba(255,255,255,0.2)",
+                    }}
                   >
-                    <span className="video-overlay-label">
-                      <Maximize2 size={14} /> Enlarge
-                    </span>
-                  </div>
+                    <Maximize2 size={12} /> Enlarge
+                  </button>
                 </div>
               ) : (
                 /* Static thumbnail */

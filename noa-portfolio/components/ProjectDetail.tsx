@@ -42,10 +42,9 @@ export function ProjectDetail({
   totalProjects,
 }: ProjectDetailProps) {
   const router = useRouter();
-  const [showVideo, setShowVideo] = useState(false);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-
   const videoUrl = getVideoUrl(project.video);
+  const [showVideo, setShowVideo] = useState(!!videoUrl);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
 
   // Keyboard navigation
   useEffect(() => {
@@ -90,7 +89,7 @@ export function ProjectDetail({
     if (ytId) {
       return (
         <iframe
-          src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`}
+          src={`https://www.youtube.com/embed/${ytId}?autoplay=1&loop=1&mute=1&rel=0&playlist=${ytId}`}
           className="w-full aspect-video rounded-card"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
@@ -103,7 +102,7 @@ export function ProjectDetail({
     if (vmId) {
       return (
         <iframe
-          src={`https://player.vimeo.com/video/${vmId}?autoplay=1`}
+          src={`https://player.vimeo.com/video/${vmId}?autoplay=1&loop=1&muted=1`}
           className="w-full aspect-video rounded-card"
           allow="autoplay; fullscreen"
           allowFullScreen
@@ -119,6 +118,8 @@ export function ProjectDetail({
         className="w-full aspect-video rounded-card"
         controls
         autoPlay
+        loop
+        muted
         playsInline
       />
     );

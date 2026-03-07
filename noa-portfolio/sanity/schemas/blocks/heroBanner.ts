@@ -54,6 +54,13 @@ export default defineType({
       description: 'The rotating "CLICK TO PLAY" circle on the hero image',
     }),
     defineField({
+      name: "autoplayVideo",
+      title: "Autoplay Video",
+      type: "boolean",
+      initialValue: false,
+      description: "Automatically start playing the video when the page loads (muted). If off, visitors click the play badge to start.",
+    }),
+    defineField({
       name: "tags",
       title: "Specialty Tags",
       type: "array",
