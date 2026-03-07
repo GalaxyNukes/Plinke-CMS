@@ -9,6 +9,15 @@ export const pageQuery = groq`
       _type,
       _key,
       ...,
+      _type == "heroBanner" => {
+        ...,
+        heroVideo {
+          ...,
+          videoFile {
+            asset-> { _id, url, mimeType }
+          }
+        }
+      },
       _type == "portfolioGrid" => {
         ...,
         projects[]->{
@@ -17,7 +26,12 @@ export const pageQuery = groq`
           slug,
           description,
           thumbnail,
-          video,
+          video {
+            ...,
+            videoFile {
+              asset-> { _id, url, mimeType }
+            }
+          },
           categories,
           year,
           projectLink,
@@ -48,6 +62,15 @@ export const pageQuery = groq`
           company,
           avatar
         }
+      },
+      _type == "videoShowreel" => {
+        ...,
+        videoSource {
+          ...,
+          videoFile {
+            asset-> { _id, url, mimeType }
+          }
+        }
       }
     }
   }
@@ -69,7 +92,7 @@ export const siteSettingsQuery = groq`
   }
 `;
 
-// Fetch all projects (for a future "all projects" page)
+// Fetch all projects
 export const allProjectsQuery = groq`
   *[_type == "project"] | order(year desc){
     _id,
@@ -77,9 +100,37 @@ export const allProjectsQuery = groq`
     slug,
     description,
     thumbnail,
+    video {
+      ...,
+      videoFile {
+        asset-> { _id, url, mimeType }
+      }
+    },
     categories,
     year,
-    projectLink
+    projectLink,
+    caseStudyContent
+  }
+`;
+
+// Fetch single project by slug
+export const projectBySlugQuery = groq`
+  *[_type == "project" && slug.current == $slug][0]{
+    _id,
+    title,
+    slug,
+    description,
+    thumbnail,
+    video {
+      ...,
+      videoFile {
+        asset-> { _id, url, mimeType }
+      }
+    },
+    categories,
+    year,
+    projectLink,
+    caseStudyContent
   }
 `;
 
