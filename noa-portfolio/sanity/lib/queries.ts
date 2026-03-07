@@ -134,6 +134,16 @@ export const projectBySlugQuery = groq`
   }
 `;
 
+// Fetch all project slugs + titles (for prev/next navigation)
+export const allProjectSlugsQuery = groq`
+  *[_type == "project"] | order(year desc, title asc){
+    _id,
+    title,
+    slug,
+    thumbnail
+  }
+`;
+
 // Fetch all game jams
 export const allGameJamsQuery = groq`
   *[_type == "gameJam"] | order(date desc){

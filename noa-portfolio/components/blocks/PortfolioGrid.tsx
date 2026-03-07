@@ -91,10 +91,14 @@ export function PortfolioGrid(props: any) {
 }
 
 function ProjectCard({ project, delay = 0, large = false }: { project: any; delay?: number; large?: boolean }) {
+  const href = project.slug?.current
+    ? `/projects/${project.slug.current}`
+    : project.projectLink || "#";
+
   return (
     <ScrollReveal delay={delay}>
       <a
-        href={project.projectLink || "#"}
+        href={href}
         className="card-hover block rounded-[14px] overflow-hidden group"
         style={{ background: "var(--bg-card)" }}
       >
