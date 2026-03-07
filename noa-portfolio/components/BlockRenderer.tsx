@@ -5,6 +5,7 @@ import { AboutTimeline } from "./blocks/AboutTimeline";
 import { VideoShowreel } from "./blocks/VideoShowreel";
 import { Testimonials } from "./blocks/Testimonials";
 import { RichTextBlock } from "./blocks/RichTextBlock";
+import { ContactBlock } from "./blocks/ContactBlock";
 
 const blockComponents: Record<string, React.ComponentType<any>> = {
   heroBanner: HeroBanner,
@@ -14,6 +15,7 @@ const blockComponents: Record<string, React.ComponentType<any>> = {
   videoShowreel: VideoShowreel,
   testimonials: Testimonials,
   richTextBlock: RichTextBlock,
+  contactBlock: ContactBlock,
 };
 
 interface BlockRendererProps {
