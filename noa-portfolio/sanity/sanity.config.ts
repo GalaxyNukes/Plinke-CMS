@@ -30,6 +30,12 @@ const deskStructure = (S: any) =>
         .icon(() => "🎨")
         .child(S.documentTypeList("project").title("Portfolio Projects")),
 
+      // 📁 Project Groups
+      S.listItem()
+        .title("Project Groups")
+        .icon(() => "📁")
+        .child(S.documentTypeList("projectGroup").title("Project Groups")),
+
       // 🎮 Games
       S.listItem()
         .title("Games")

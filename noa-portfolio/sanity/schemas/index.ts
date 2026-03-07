@@ -2,6 +2,7 @@
 import siteSettings from "./documents/siteSettings";
 import page from "./documents/page";
 import project from "./documents/project";
+import projectGroup from "./documents/projectGroup";
 import gameJam from "./documents/gameJam";
 import testimonial from "./documents/testimonial";
 
@@ -20,6 +21,7 @@ export const schemaTypes = [
   siteSettings,
   page,
   project,
+  projectGroup,
   gameJam,
   testimonial,
 

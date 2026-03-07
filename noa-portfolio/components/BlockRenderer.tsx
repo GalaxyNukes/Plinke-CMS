@@ -21,15 +21,16 @@ const blockComponents: Record<string, React.ComponentType<any>> = {
 interface BlockRendererProps {
   blocks: any[];
   settings?: any;
+  projectGroups?: any[];
 }
 
-export function BlockRenderer({ blocks, settings }: BlockRendererProps) {
+export function BlockRenderer({ blocks, settings, projectGroups = [] }: BlockRendererProps) {
   return (
     <>
       {blocks.map((block: any) => {
         const Component = blockComponents[block._type];
         if (!Component) return null;
-        return <Component key={block._key} {...block} settings={settings} />;
+        return <Component key={block._key} {...block} settings={settings} projectGroups={projectGroups} />;
       })}
     </>
   );

@@ -1,5 +1,5 @@
 import { client } from "@/sanity/sanity.client";
-import { pageQuery, siteSettingsQuery } from "@/sanity/lib/queries";
+import { pageQuery, siteSettingsQuery, allProjectGroupsQuery } from "@/sanity/lib/queries";
 import { BlockRenderer } from "@/components/BlockRenderer";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -9,12 +9,14 @@ export const revalidate = 60;
 export default async function HomePage() {
   let page = null;
   let settings = null;
+  let projectGroups: any[] = [];
 
   try {
     if (!client) throw new Error("CMS not connected");
-    [page, settings] = await Promise.all([
+    [page, settings, projectGroups] = await Promise.all([
       client.fetch(pageQuery, { slug: "home" }),
       client.fetch(siteSettingsQuery),
+      client.fetch(allProjectGroupsQuery),
     ]);
   } catch (e) {
     // CMS not connected yet — show fallback
@@ -52,7 +54,7 @@ export default async function HomePage() {
   return (
     <main className="max-w-[1320px] mx-auto p-5">
       <Navbar settings={settings} />
-      <BlockRenderer blocks={page.blocks || []} settings={settings} />
+      <BlockRenderer blocks={page.blocks || []} settings={settings} projectGroups={projectGroups || []} />
       <Footer settings={settings} />
     </main>
   );

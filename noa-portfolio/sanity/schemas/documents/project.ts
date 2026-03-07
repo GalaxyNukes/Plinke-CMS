@@ -65,10 +65,15 @@ export default defineType({
     }),
     defineField({
       name: "projectGroup",
-      title: "Project / Game Name",
-      type: "string",
-      description: "Which game or project does this animation belong to? e.g., 'Hunting Simulator', 'Baldur's Gate'. Used for the Projects dropdown filter.",
+      title: "Project / Game",
+      type: "reference",
+      to: [{ type: "projectGroup" }],
+      description: "Which game or project does this belong to? Pick an existing one or create a new one.",
       hidden: ({ parent }: any) => parent?.projectType !== "Project",
+      options: {
+        // Allows creating a new project group inline without leaving the editor
+        disableNew: false,
+      },
     }),
     defineField({
       name: "categories",

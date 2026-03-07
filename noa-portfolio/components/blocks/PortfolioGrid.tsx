@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { ArrowUpRight, ChevronDown } from "lucide-react";
 import { urlFor } from "@/sanity/lib/image";
@@ -9,7 +9,7 @@ import { ScrollReveal } from "../ui/ScrollReveal";
 type FilterValue =
   | "All"
   | "Demoreels"
-  | { type: "projectGroup"; name: string }
+  | { type: "group"; id: string; name: string }
   | { type: "category"; name: string };
 
 export function PortfolioGrid(props: any) {
@@ -19,6 +19,7 @@ export function PortfolioGrid(props: any) {
     projects = [],
     viewAllLink,
     settings,
+    projectGroups = [],
   } = props;
 
   const categories = settings?.projectCategories || [
@@ -27,17 +28,6 @@ export function PortfolioGrid(props: any) {
     "Motion Capture",
   ];
 
-  // Extract unique project groups from data
-  const projectGroups = useMemo(() => {
-    const groups = new Set<string>();
-    projects.forEach((p: any) => {
-      if (p.projectType === "Project" && p.projectGroup) {
-        groups.add(p.projectGroup);
-      }
-    });
-    return Array.from(groups).sort();
-  }, [projects]);
-
   const [active, setActive] = useState<FilterValue>("All");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -45,10 +35,7 @@ export function PortfolioGrid(props: any) {
   // Close dropdown on outside click
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
       }
     };
@@ -56,27 +43,16 @@ export function PortfolioGrid(props: any) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // Active filter label for display
-  const activeLabel =
-    active === "All"
-      ? "All"
-      : active === "Demoreels"
-        ? "Demoreels"
-        : typeof active === "object" && active.type === "projectGroup"
-          ? active.name
-          : typeof active === "object" && active.type === "category"
-            ? active.name
-            : "All";
-
-  const isProjectGroupActive =
-    typeof active === "object" && active.type === "projectGroup";
+  const isGroupActive = typeof active === "object" && active.type === "group";
+  const isCategoryActive = typeof active === "object" && active.type === "category";
 
   // Filter logic
   const filtered = projects.filter((p: any) => {
     if (active === "All") return true;
     if (active === "Demoreels") return p.projectType === "Demoreel";
-    if (typeof active === "object" && active.type === "projectGroup") {
-      return p.projectType === "Project" && p.projectGroup === active.name;
+    if (typeof active === "object" && active.type === "group") {
+      if (active.id === "__all__") return p.projectType === "Project" || !!p.projectGroup;
+      return p.projectGroup?._id === active.id;
     }
     if (typeof active === "object" && active.type === "category") {
       return p.categories?.includes(active.name);
@@ -84,12 +60,9 @@ export function PortfolioGrid(props: any) {
     return true;
   });
 
-  const pillClass = (isActive: boolean) =>
-    `px-5 py-2.5 rounded-full border text-sm font-medium transition-all ${
-      isActive
-        ? "bg-[var(--text-dark)] text-white border-[var(--text-dark)]"
-        : "bg-transparent text-[var(--text-dark)] border-gray-200 hover:border-[var(--text-dark)]"
-    }`;
+  const pillBase = "px-5 py-2.5 rounded-full border text-sm font-medium transition-all";
+  const pillActive = `${pillBase} bg-[var(--text-dark)] text-white border-[var(--text-dark)]`;
+  const pillInactive = `${pillBase} bg-transparent text-[var(--text-dark)] border-gray-200 hover:border-[var(--text-dark)]`;
 
   return (
     <section
@@ -113,7 +86,7 @@ export function PortfolioGrid(props: any) {
             {/* All */}
             <button
               onClick={() => setActive("All")}
-              className={pillClass(active === "All")}
+              className={active === "All" ? pillActive : pillInactive}
             >
               All
             </button>
@@ -121,21 +94,19 @@ export function PortfolioGrid(props: any) {
             {/* Demoreels */}
             <button
               onClick={() => setActive("Demoreels")}
-              className={pillClass(active === "Demoreels")}
+              className={active === "Demoreels" ? pillActive : pillInactive}
             >
               Demoreels
             </button>
 
-            {/* Projects dropdown */}
+            {/* Projects dropdown — only shows if there are project groups */}
             {projectGroups.length > 0 && (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className={`${pillClass(isProjectGroupActive)} flex items-center gap-1.5`}
+                  className={`${isGroupActive ? pillActive : pillInactive} flex items-center gap-1.5`}
                 >
-                  {isProjectGroupActive
-                    ? (active as any).name
-                    : "Projects"}
+                  {isGroupActive ? (active as any).name : "Projects"}
                   <ChevronDown
                     size={14}
                     className={`transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
@@ -150,25 +121,39 @@ export function PortfolioGrid(props: any) {
                       borderColor: "rgba(0,0,0,0.08)",
                     }}
                   >
-                    {projectGroups.map((group) => {
-                      const isGroupActive =
-                        isProjectGroupActive &&
-                        (active as any).name === group;
+                    {/* Show all projects option */}
+                    <button
+                      onClick={() => {
+                        // Filter to all items that have a projectGroup (i.e. all "Project" type items)
+                        setActive({ type: "group", id: "__all__", name: "All Projects" });
+                        setDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-black/5 border-b"
+                      style={{
+                        color: isGroupActive && (active as any).id === "__all__"
+                          ? "var(--accent-secondary)"
+                          : "var(--text-dark)",
+                        borderColor: "rgba(0,0,0,0.05)",
+                      }}
+                    >
+                      All Projects
+                    </button>
+
+                    {projectGroups.map((group: any) => {
+                      const isThisGroup = isGroupActive && (active as any).id === group._id;
                       return (
                         <button
-                          key={group}
+                          key={group._id}
                           onClick={() => {
-                            setActive({ type: "projectGroup", name: group });
+                            setActive({ type: "group", id: group._id, name: group.name });
                             setDropdownOpen(false);
                           }}
                           className="w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-black/5"
                           style={{
-                            color: isGroupActive
-                              ? "var(--accent-secondary)"
-                              : "var(--text-dark)",
+                            color: isThisGroup ? "var(--accent-secondary)" : "var(--text-dark)",
                           }}
                         >
-                          {group}
+                          {group.name}
                         </button>
                       );
                     })}
@@ -182,11 +167,11 @@ export function PortfolioGrid(props: any) {
               <button
                 key={cat}
                 onClick={() => setActive({ type: "category", name: cat })}
-                className={pillClass(
-                  typeof active === "object" &&
-                    active.type === "category" &&
-                    active.name === cat
-                )}
+                className={
+                  isCategoryActive && (active as any).name === cat
+                    ? pillActive
+                    : pillInactive
+                }
               >
                 {cat}
               </button>
@@ -208,12 +193,7 @@ export function PortfolioGrid(props: any) {
       {filtered.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {filtered.slice(0, 2).map((p: any, i: number) => (
-            <ProjectCard
-              key={p._id || i}
-              project={p}
-              delay={i * 0.1}
-              large
-            />
+            <ProjectCard key={p._id || i} project={p} delay={i * 0.1} large />
           ))}
         </div>
       )}
@@ -222,11 +202,7 @@ export function PortfolioGrid(props: any) {
       {filtered.length > 2 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           {filtered.slice(2).map((p: any, i: number) => (
-            <ProjectCard
-              key={p._id || i}
-              project={p}
-              delay={i * 0.1}
-            />
+            <ProjectCard key={p._id || i} project={p} delay={i * 0.1} />
           ))}
         </div>
       )}
@@ -285,8 +261,7 @@ function ProjectCard({
               className="w-full flex items-center justify-center text-white/20 text-sm img-zoom"
               style={{
                 height: large ? "320px" : "240px",
-                background:
-                  "linear-gradient(135deg, #1a1a2e, #16213e, #0f3460)",
+                background: "linear-gradient(135deg, #1a1a2e, #16213e, #0f3460)",
               }}
             >
               800×{large ? 400 : 320} — Project Image
@@ -304,19 +279,13 @@ function ProjectCard({
                 【✦ {c}】
               </span>
             ))}
-            {project.projectGroup && (
-              <span
-                className="text-xs font-semibold"
-                style={{ color: "var(--text-muted)" }}
-              >
-                【{project.projectGroup}】
+            {project.projectGroup?.name && (
+              <span className="text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
+                【{project.projectGroup.name}】
               </span>
             )}
             {project.year && (
-              <span
-                className="text-xs"
-                style={{ color: "var(--text-muted)" }}
-              >
+              <span className="text-xs" style={{ color: "var(--text-muted)" }}>
                 【{project.year}】
               </span>
             )}
@@ -328,10 +297,7 @@ function ProjectCard({
             {project.title}
           </h3>
           {project.description && (
-            <p
-              className="text-sm leading-relaxed"
-              style={{ color: "var(--text-muted)" }}
-            >
+            <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
               {project.description}
             </p>
           )}

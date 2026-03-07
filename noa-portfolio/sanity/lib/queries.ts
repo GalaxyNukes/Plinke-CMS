@@ -39,7 +39,7 @@ export const pageQuery = groq`
             }
           },
           projectType,
-          projectGroup,
+          projectGroup->{ _id, name },
           categories,
           year,
           projectLink,
@@ -119,7 +119,7 @@ export const allProjectsQuery = groq`
       }
     },
     projectType,
-          projectGroup,
+          projectGroup->{ _id, name },
     categories,
     year,
     projectLink,
@@ -142,7 +142,7 @@ export const projectBySlugQuery = groq`
       }
     },
     projectType,
-          projectGroup,
+          projectGroup->{ _id, name },
     categories,
     year,
     projectLink,
@@ -176,5 +176,13 @@ export const allGameJamsQuery = groq`
     teamSize,
     playLink,
     videoLink
+  }
+`;
+
+// Fetch all project groups (for portfolio filter dropdown)
+export const allProjectGroupsQuery = groq`
+  *[_type == "projectGroup"] | order(name asc){
+    _id,
+    name
   }
 `;
