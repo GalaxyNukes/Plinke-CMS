@@ -39,6 +39,7 @@ export const pageQuery = groq`
             }
           },
           projectType,
+          projectGroup,
           categories,
           year,
           projectLink,
@@ -118,6 +119,7 @@ export const allProjectsQuery = groq`
       }
     },
     projectType,
+          projectGroup,
     categories,
     year,
     projectLink,
@@ -140,6 +142,7 @@ export const projectBySlugQuery = groq`
       }
     },
     projectType,
+          projectGroup,
     categories,
     year,
     projectLink,

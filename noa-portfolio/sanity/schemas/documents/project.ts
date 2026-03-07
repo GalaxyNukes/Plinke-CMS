@@ -64,6 +64,13 @@ export default defineType({
       description: "Is this a full project or a demoreel?",
     }),
     defineField({
+      name: "projectGroup",
+      title: "Project / Game Name",
+      type: "string",
+      description: "Which game or project does this animation belong to? e.g., 'Hunting Simulator', 'Baldur's Gate'. Used for the Projects dropdown filter.",
+      hidden: ({ parent }: any) => parent?.projectType !== "Project",
+    }),
+    defineField({
       name: "categories",
       title: "Categories",
       type: "array",

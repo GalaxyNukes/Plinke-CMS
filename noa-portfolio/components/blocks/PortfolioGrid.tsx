@@ -1,10 +1,16 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { ArrowUpRight, ChevronDown } from "lucide-react";
 import { urlFor } from "@/sanity/lib/image";
 import { ScrollReveal } from "../ui/ScrollReveal";
+
+type FilterValue =
+  | "All"
+  | "Demoreels"
+  | { type: "projectGroup"; name: string }
+  | { type: "category"; name: string };
 
 export function PortfolioGrid(props: any) {
   const {
@@ -15,19 +21,34 @@ export function PortfolioGrid(props: any) {
     settings,
   } = props;
 
-  const categories = settings?.projectCategories || ["Procedural Animation", "Keyframe Animation", "Motion Capture"];
-  const typeOptions = ["All", "Projects", "Demoreels"];
-  const categoryOptions = ["All", ...categories];
+  const categories = settings?.projectCategories || [
+    "Procedural Animation",
+    "Keyframe Animation",
+    "Motion Capture",
+  ];
 
-  const [activeType, setActiveType] = useState("All");
-  const [activeCategory, setActiveCategory] = useState("All");
+  // Extract unique project groups from data
+  const projectGroups = useMemo(() => {
+    const groups = new Set<string>();
+    projects.forEach((p: any) => {
+      if (p.projectType === "Project" && p.projectGroup) {
+        groups.add(p.projectGroup);
+      }
+    });
+    return Array.from(groups).sort();
+  }, [projects]);
+
+  const [active, setActive] = useState<FilterValue>("All");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on outside click
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setDropdownOpen(false);
       }
     };
@@ -35,16 +56,40 @@ export function PortfolioGrid(props: any) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // Filter logic: type first, then category
+  // Active filter label for display
+  const activeLabel =
+    active === "All"
+      ? "All"
+      : active === "Demoreels"
+        ? "Demoreels"
+        : typeof active === "object" && active.type === "projectGroup"
+          ? active.name
+          : typeof active === "object" && active.type === "category"
+            ? active.name
+            : "All";
+
+  const isProjectGroupActive =
+    typeof active === "object" && active.type === "projectGroup";
+
+  // Filter logic
   const filtered = projects.filter((p: any) => {
-    const typeMatch =
-      activeType === "All" ||
-      (activeType === "Projects" && (p.projectType === "Project" || !p.projectType)) ||
-      (activeType === "Demoreels" && p.projectType === "Demoreel");
-    const catMatch =
-      activeCategory === "All" || p.categories?.includes(activeCategory);
-    return typeMatch && catMatch;
+    if (active === "All") return true;
+    if (active === "Demoreels") return p.projectType === "Demoreel";
+    if (typeof active === "object" && active.type === "projectGroup") {
+      return p.projectType === "Project" && p.projectGroup === active.name;
+    }
+    if (typeof active === "object" && active.type === "category") {
+      return p.categories?.includes(active.name);
+    }
+    return true;
   });
+
+  const pillClass = (isActive: boolean) =>
+    `px-5 py-2.5 rounded-full border text-sm font-medium transition-all ${
+      isActive
+        ? "bg-[var(--text-dark)] text-white border-[var(--text-dark)]"
+        : "bg-transparent text-[var(--text-dark)] border-gray-200 hover:border-[var(--text-dark)]"
+    }`;
 
   return (
     <section
@@ -61,74 +106,87 @@ export function PortfolioGrid(props: any) {
         </h2>
       </ScrollReveal>
 
-      {/* Filters */}
+      {/* Filters — all same pill style */}
       {showFilters && (
         <ScrollReveal delay={0.1}>
-          <div className="flex flex-wrap items-center gap-3 mb-10">
-            {/* Type dropdown */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full border text-sm font-medium transition-all"
-                style={{
-                  background: activeType !== "All" ? "var(--text-dark)" : "transparent",
-                  color: activeType !== "All" ? "white" : "var(--text-dark)",
-                  borderColor: activeType !== "All" ? "var(--text-dark)" : "#e5e7eb",
-                }}
-              >
-                {activeType === "All" ? "Type" : activeType}
-                <ChevronDown
-                  size={14}
-                  className={`transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
-                />
-              </button>
+          <div className="flex flex-wrap items-center gap-2.5 mb-10">
+            {/* All */}
+            <button
+              onClick={() => setActive("All")}
+              className={pillClass(active === "All")}
+            >
+              All
+            </button>
 
-              {dropdownOpen && (
-                <div
-                  className="absolute top-full left-0 mt-2 min-w-[160px] rounded-xl overflow-hidden shadow-xl z-20 border"
-                  style={{
-                    background: "var(--bg-card)",
-                    borderColor: "rgba(0,0,0,0.08)",
-                  }}
+            {/* Demoreels */}
+            <button
+              onClick={() => setActive("Demoreels")}
+              className={pillClass(active === "Demoreels")}
+            >
+              Demoreels
+            </button>
+
+            {/* Projects dropdown */}
+            {projectGroups.length > 0 && (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className={`${pillClass(isProjectGroupActive)} flex items-center gap-1.5`}
                 >
-                  {typeOptions.map((opt) => (
-                    <button
-                      key={opt}
-                      onClick={() => {
-                        setActiveType(opt);
-                        setDropdownOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-black/5"
-                      style={{
-                        color:
-                          activeType === opt
-                            ? "var(--accent-secondary)"
-                            : "var(--text-dark)",
-                      }}
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                  {isProjectGroupActive
+                    ? (active as any).name
+                    : "Projects"}
+                  <ChevronDown
+                    size={14}
+                    className={`transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
 
-            {/* Divider */}
-            <div
-              className="hidden sm:block w-px h-6"
-              style={{ background: "rgba(0,0,0,0.1)" }}
-            />
+                {dropdownOpen && (
+                  <div
+                    className="absolute top-full left-0 mt-2 min-w-[200px] rounded-xl overflow-hidden shadow-xl z-20 border py-1"
+                    style={{
+                      background: "var(--bg-card)",
+                      borderColor: "rgba(0,0,0,0.08)",
+                    }}
+                  >
+                    {projectGroups.map((group) => {
+                      const isGroupActive =
+                        isProjectGroupActive &&
+                        (active as any).name === group;
+                      return (
+                        <button
+                          key={group}
+                          onClick={() => {
+                            setActive({ type: "projectGroup", name: group });
+                            setDropdownOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-black/5"
+                          style={{
+                            color: isGroupActive
+                              ? "var(--accent-secondary)"
+                              : "var(--text-dark)",
+                          }}
+                        >
+                          {group}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Category pills */}
-            {categoryOptions.map((cat: string) => (
+            {categories.map((cat: string) => (
               <button
                 key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-5 py-2.5 rounded-full border text-sm font-medium transition-all ${
-                  activeCategory === cat
-                    ? "bg-[var(--text-dark)] text-white border-[var(--text-dark)]"
-                    : "bg-transparent text-[var(--text-dark)] border-gray-200 hover:border-[var(--text-dark)]"
-                }`}
+                onClick={() => setActive({ type: "category", name: cat })}
+                className={pillClass(
+                  typeof active === "object" &&
+                    active.type === "category" &&
+                    active.name === cat
+                )}
               >
                 {cat}
               </button>
@@ -141,7 +199,7 @@ export function PortfolioGrid(props: any) {
       {filtered.length === 0 && (
         <div className="text-center py-16">
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            No projects match the selected filters.
+            No projects match the selected filter.
           </p>
         </div>
       )}
@@ -150,7 +208,12 @@ export function PortfolioGrid(props: any) {
       {filtered.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {filtered.slice(0, 2).map((p: any, i: number) => (
-            <ProjectCard key={p._id || i} project={p} delay={i * 0.1} large />
+            <ProjectCard
+              key={p._id || i}
+              project={p}
+              delay={i * 0.1}
+              large
+            />
           ))}
         </div>
       )}
@@ -159,7 +222,11 @@ export function PortfolioGrid(props: any) {
       {filtered.length > 2 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           {filtered.slice(2).map((p: any, i: number) => (
-            <ProjectCard key={p._id || i} project={p} delay={i * 0.1} />
+            <ProjectCard
+              key={p._id || i}
+              project={p}
+              delay={i * 0.1}
+            />
           ))}
         </div>
       )}
@@ -218,7 +285,8 @@ function ProjectCard({
               className="w-full flex items-center justify-center text-white/20 text-sm img-zoom"
               style={{
                 height: large ? "320px" : "240px",
-                background: "linear-gradient(135deg, #1a1a2e, #16213e, #0f3460)",
+                background:
+                  "linear-gradient(135deg, #1a1a2e, #16213e, #0f3460)",
               }}
             >
               800×{large ? 400 : 320} — Project Image
@@ -227,23 +295,6 @@ function ProjectCard({
         </div>
         <div className="p-4 pb-2">
           <div className="flex flex-wrap gap-2 mb-2">
-            {project.projectType && (
-              <span
-                className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                style={{
-                  background:
-                    project.projectType === "Demoreel"
-                      ? "rgba(201,251,0,0.12)"
-                      : "rgba(123,97,255,0.12)",
-                  color:
-                    project.projectType === "Demoreel"
-                      ? "var(--accent)"
-                      : "var(--accent-secondary)",
-                }}
-              >
-                {project.projectType}
-              </span>
-            )}
             {project.categories?.map((c: string) => (
               <span
                 key={c}
@@ -253,6 +304,14 @@ function ProjectCard({
                 【✦ {c}】
               </span>
             ))}
+            {project.projectGroup && (
+              <span
+                className="text-xs font-semibold"
+                style={{ color: "var(--text-muted)" }}
+              >
+                【{project.projectGroup}】
+              </span>
+            )}
             {project.year && (
               <span
                 className="text-xs"
