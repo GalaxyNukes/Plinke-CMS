@@ -16,6 +16,12 @@ export const pageQuery = groq`
           videoFile {
             asset-> { _id, url, mimeType }
           }
+        },
+        hero3dModel {
+          ...,
+          modelFile {
+            asset-> { _id, url, mimeType }
+          }
         }
       },
       _type == "portfolioGrid" => {

@@ -53,6 +53,7 @@ export function HeroBanner(props: any) {
     heroImage,
     heroVideo,
     heroDisplay = "image",
+    hero3dModel,
     secondaryThumbnail,
     showPlayBadge = true,
     autoplayVideo = false,
@@ -227,7 +228,14 @@ export function HeroBanner(props: any) {
         <div className="w-full md:w-[55%] relative p-0 md:pr-5 md:pb-5 min-h-[400px] md:min-h-[500px]">
           <div className="w-full h-full rounded-card overflow-hidden relative">
             {heroDisplay === "3d" ? (
-              <HeroCharacter3D />
+              <HeroCharacter3D
+                modelUrl={hero3dModel?.modelFile?.asset?.url || null}
+                headBoneName={hero3dModel?.headBoneName || "Head"}
+                cameraDistance={hero3dModel?.cameraDistance || 4.5}
+                cameraHeight={hero3dModel?.cameraHeight || 1.0}
+                modelScale={hero3dModel?.modelScale || 1.0}
+                headTrackIntensity={hero3dModel?.headTrackIntensity || 0.6}
+              />
             ) : heroImage ? (
               <Image
                 src={urlFor(heroImage).width(1200).height(800).url()}
