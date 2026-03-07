@@ -32,6 +32,7 @@ export default defineType({
         { type: "videoShowreel" },
         { type: "testimonials" },
         { type: "richTextBlock" },
+        { type: "contactBlock" },
       ],
     }),
   ],
