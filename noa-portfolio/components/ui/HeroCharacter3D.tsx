@@ -40,8 +40,8 @@ export function HeroCharacter3D({
     const camera = new THREE.PerspectiveCamera(
       45,
       container.clientWidth / container.clientHeight,
-      0.1,
-      100
+      0.01,
+      500
     );
     camera.position.set(0, cameraHeight, cameraDistance);
     camera.lookAt(0, cameraHeight * 0.6, 0);
@@ -52,28 +52,50 @@ export function HeroCharacter3D({
     renderer.setClearColor(0x000000, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
+    renderer.toneMappingExposure = 1.5;
     container.appendChild(renderer.domElement);
 
-    // ── Lighting ──
-    const ambientLight = new THREE.AmbientLight(0x404060, 0.8);
+    // ── Lighting — generous to handle any model ──
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xc9fb00, 0.9);
+    const keyLight = new THREE.DirectionalLight(0xc9fb00, 1.0);
     keyLight.position.set(3, 4, 5);
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(0x7b61ff, 0.6);
+    const fillLight = new THREE.DirectionalLight(0x7b61ff, 0.7);
     fillLight.position.set(-3, 2, 3);
     scene.add(fillLight);
 
-    const rimLight = new THREE.DirectionalLight(0xffffff, 0.4);
+    const rimLight = new THREE.DirectionalLight(0xffffff, 0.5);
     rimLight.position.set(0, -2, -3);
     scene.add(rimLight);
 
-    const topLight = new THREE.DirectionalLight(0xffffff, 0.3);
+    const topLight = new THREE.DirectionalLight(0xffffff, 0.6);
     topLight.position.set(0, 5, 0);
     scene.add(topLight);
+
+    // Add a hemisphere light for natural fill
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
+    scene.add(hemiLight);
+
+    // ── Environment for PBR materials (metallic/roughness need this) ──
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
+    // Create a simple gradient environment
+    const envScene = new THREE.Scene();
+    envScene.background = new THREE.Color(0x1a1a2e);
+    const envLight1 = new THREE.DirectionalLight(0xc9fb00, 2);
+    envLight1.position.set(1, 1, 1);
+    envScene.add(envLight1);
+    const envLight2 = new THREE.DirectionalLight(0x7b61ff, 2);
+    envLight2.position.set(-1, 0.5, -1);
+    envScene.add(envLight2);
+    const envLight3 = new THREE.AmbientLight(0xffffff, 1);
+    envScene.add(envLight3);
+    const envTexture = pmremGenerator.fromScene(envScene).texture;
+    scene.environment = envTexture;
+    pmremGenerator.dispose();
 
     // ── Floating Particles ──
     const particleCount = 50;
@@ -106,25 +128,73 @@ export function HeroCharacter3D({
         modelUrl,
         (gltf: any) => {
           const model = gltf.scene;
-          model.scale.setScalar(modelScale);
 
-          // Center the model
+          // Step 1: Measure the raw model
+          const rawBox = new THREE.Box3().setFromObject(model);
+          const rawSize = rawBox.getSize(new THREE.Vector3());
+          const rawCenter = rawBox.getCenter(new THREE.Vector3());
+
+          console.log("[3D] Model loaded successfully");
+          console.log("[3D] Raw size:", rawSize.x.toFixed(2), rawSize.y.toFixed(2), rawSize.z.toFixed(2));
+          console.log("[3D] Raw center:", rawCenter.x.toFixed(2), rawCenter.y.toFixed(2), rawCenter.z.toFixed(2));
+
+          // Step 2: Auto-scale to fit a reasonable size (target ~3 units tall)
+          const maxDim = Math.max(rawSize.x, rawSize.y, rawSize.z);
+          const targetSize = 3.0;
+          const autoScale = maxDim > 0 ? (targetSize / maxDim) * modelScale : modelScale;
+          model.scale.setScalar(autoScale);
+
+          console.log("[3D] Auto-scale:", autoScale.toFixed(4), "(modelScale:", modelScale, ")");
+
+          // Step 3: Re-measure after scaling and center the model
           const box = new THREE.Box3().setFromObject(model);
+          const size = box.getSize(new THREE.Vector3());
           const center = box.getCenter(new THREE.Vector3());
-          model.position.sub(center);
-          model.position.y += (box.max.y - box.min.y) * 0.05; // slight upward nudge
+
+          // Center horizontally + depth, keep feet on the ground
+          model.position.x = -center.x;
+          model.position.z = -center.z;
+          model.position.y = -box.min.y; // feet on ground (y=0)
+
+          console.log("[3D] Final size:", size.x.toFixed(2), size.y.toFixed(2), size.z.toFixed(2));
+
+          // Step 4: Position camera to frame the model
+          const modelHeight = size.y;
+          camera.position.set(0, modelHeight * 0.45, modelHeight * 1.5 * (cameraDistance / 4.5));
+          camera.lookAt(0, modelHeight * 0.4, 0);
+
+          console.log("[3D] Camera at:", camera.position.x.toFixed(2), camera.position.y.toFixed(2), camera.position.z.toFixed(2));
 
           scene.add(model);
 
-          // Find head bone
+          // Step 5: Fix materials — ensure they render
           model.traverse((child: any) => {
-            if (child.isBone && child.name === headBoneName) {
-              headBone = child;
-            }
-            // Enable shadows on meshes
             if (child.isMesh) {
               child.castShadow = true;
               child.receiveShadow = true;
+              child.frustumCulled = false; // prevent culling issues
+
+              // Fix common material issues
+              if (child.material) {
+                const mats = Array.isArray(child.material) ? child.material : [child.material];
+                mats.forEach((mat: any) => {
+                  mat.needsUpdate = true;
+                  // If material is too dark/transparent, boost it
+                  if (mat.transparent && mat.opacity < 0.1) {
+                    mat.transparent = false;
+                    mat.opacity = 1;
+                  }
+                  // Ensure double-sided rendering
+                  mat.side = THREE.DoubleSide;
+                });
+              }
+            }
+          });
+
+          // Step 6: Find head bone
+          model.traverse((child: any) => {
+            if (child.isBone && child.name === headBoneName) {
+              headBone = child;
             }
           });
 
@@ -141,23 +211,24 @@ export function HeroCharacter3D({
             });
           }
 
-          if (!headBone) {
-            console.warn(
-              `Head bone "${headBoneName}" not found. Available bones:`,
-              (() => {
-                const names: string[] = [];
-                model.traverse((c: any) => {
-                  if (c.isBone) names.push(c.name);
-                });
-                return names;
-              })()
-            );
-          }
+          // Log all bones for debugging
+          const boneNames: string[] = [];
+          model.traverse((c: any) => {
+            if (c.isBone) boneNames.push(c.name);
+          });
+          console.log("[3D] Head bone:", headBone ? headBone.name : "NOT FOUND");
+          console.log("[3D] All bones:", boneNames);
 
-          // Play idle animation
+          // Log all meshes
+          const meshNames: string[] = [];
+          model.traverse((c: any) => {
+            if (c.isMesh) meshNames.push(c.name || "(unnamed mesh)");
+          });
+          console.log("[3D] Meshes:", meshNames);
+
+          // Step 7: Play idle animation
           if (gltf.animations.length > 0) {
             mixer = new THREE.AnimationMixer(model);
-            // Use the first animation as idle, or find one named "idle"
             let idleClip = gltf.animations[0];
             for (const clip of gltf.animations) {
               if (clip.name.toLowerCase().includes("idle")) {
@@ -167,13 +238,20 @@ export function HeroCharacter3D({
             }
             const action = mixer.clipAction(idleClip);
             action.play();
+            console.log("[3D] Playing animation:", idleClip.name, "(" + gltf.animations.length + " total)");
+          } else {
+            console.log("[3D] No animations found in file");
           }
 
           setLoading(false);
         },
-        undefined,
+        (progress: any) => {
+          if (progress.total > 0) {
+            console.log("[3D] Loading:", Math.round((progress.loaded / progress.total) * 100) + "%");
+          }
+        },
         (err: any) => {
-          console.error("Failed to load 3D model:", err);
+          console.error("[3D] Failed to load model:", err);
           setError("Failed to load 3D model");
           setLoading(false);
         }
