@@ -27,6 +27,21 @@ export default defineType({
       fields: [
         { name: "alt", title: "Alt Text", type: "string" },
       ],
+      hidden: ({ parent }: any) => parent?.heroDisplay === "3d",
+    }),
+    defineField({
+      name: "heroDisplay",
+      title: "Hero Display Mode",
+      type: "string",
+      description: "Choose between a static image or an interactive 3D character that follows the cursor",
+      options: {
+        list: [
+          { title: "Image", value: "image" },
+          { title: "3D Character (interactive)", value: "3d" },
+        ],
+        layout: "radio",
+      },
+      initialValue: "image",
     }),
     defineField({
       name: "heroVideo",

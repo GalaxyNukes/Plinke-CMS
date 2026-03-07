@@ -1,11 +1,23 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { urlFor } from "@/sanity/lib/image";
 import { ScrollReveal } from "../ui/ScrollReveal";
 import { RotatingBadge } from "../ui/RotatingBadge";
 import { Maximize2, Minimize2 } from "lucide-react";
+
+// Dynamic import — Three.js is client-only and heavy
+const HeroCharacter3D = dynamic(
+  () => import("../ui/HeroCharacter3D").then((mod) => mod.HeroCharacter3D),
+  { ssr: false, loading: () => (
+    <div className="w-full h-full flex items-center justify-center text-white/10 text-sm"
+      style={{ background: "linear-gradient(135deg, #0a0a1a, #1a1a3a, #0f2a3f)" }}>
+      Loading 3D...
+    </div>
+  )}
+);
 
 /* Organic rotations + size variants for tags */
 const TAG_ROTATIONS = [-8, 3, -4, 6, -2, 5, -6, 3, -5, 4];
@@ -40,6 +52,7 @@ export function HeroBanner(props: any) {
     subtitle = "",
     heroImage,
     heroVideo,
+    heroDisplay = "image",
     secondaryThumbnail,
     showPlayBadge = true,
     autoplayVideo = false,
@@ -213,7 +226,9 @@ export function HeroBanner(props: any) {
         {/* ── RIGHT SIDE — Hero image + video thumbnail ── */}
         <div className="w-full md:w-[55%] relative p-0 md:pr-5 md:pb-5 min-h-[400px] md:min-h-[500px]">
           <div className="w-full h-full rounded-card overflow-hidden relative">
-            {heroImage ? (
+            {heroDisplay === "3d" ? (
+              <HeroCharacter3D />
+            ) : heroImage ? (
               <Image
                 src={urlFor(heroImage).width(1200).height(800).url()}
                 alt={heroImage.alt || "Hero image"}
