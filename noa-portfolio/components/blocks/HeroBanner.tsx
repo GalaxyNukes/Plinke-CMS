@@ -1,23 +1,130 @@
 "use client";
 
+import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import { urlFor } from "@/sanity/lib/image";
 import { ScrollReveal } from "../ui/ScrollReveal";
 import { RotatingBadge } from "../ui/RotatingBadge";
+import { Maximize2, Minimize2 } from "lucide-react";
 
-const TAG_ROTATIONS = [-12, 3, -6, 8, -3, 5, -9, 4, -5, 7];
+/* Organic rotations + size variants for tags */
+const TAG_ROTATIONS = [-8, 3, -4, 6, -2, 5, -6, 3, -5, 4];
+const TAG_SIZES = ["text-sm", "text-base", "text-sm", "text-base", "text-xs", "text-sm", "text-base", "text-sm", "text-xs", "text-base"];
+
+function getVideoUrl(heroVideo: any): string | null {
+  if (!heroVideo) return null;
+  // Uploaded file — asset is dereferenced by GROQ
+  if (heroVideo.videoFile?.asset?.url) return heroVideo.videoFile.asset.url;
+  // YouTube / Vimeo embed
+  if (heroVideo.embedUrl) return heroVideo.embedUrl;
+  return null;
+}
+
+function getYouTubeId(url: string) {
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?\s]+)/);
+  return m?.[1] || null;
+}
+
+function getVimeoId(url: string) {
+  const m = url.match(/vimeo\.com\/(\d+)/);
+  return m?.[1] || null;
+}
+
+function isEmbedUrl(url: string) {
+  return url.includes("youtube") || url.includes("youtu.be") || url.includes("vimeo");
+}
 
 export function HeroBanner(props: any) {
   const {
     heading = "Animation that hits different",
     subtitle = "",
     heroImage,
+    heroVideo,
     secondaryThumbnail,
     showPlayBadge = true,
     tags = [],
     ctaLabel = "SEND ME AN EMAIL",
     ctaLink = "#",
   } = props;
+
+  const [videoState, setVideoState] = useState<"idle" | "small" | "large">("idle");
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const videoUrl = getVideoUrl(heroVideo);
+  const hasVideo = !!videoUrl;
+  const isEmbed = hasVideo && isEmbedUrl(videoUrl!);
+
+  const handlePlayClick = useCallback(() => {
+    if (!hasVideo) return;
+    setVideoState("small");
+    // For direct video files, play after state update
+    setTimeout(() => {
+      videoRef.current?.play();
+    }, 100);
+  }, [hasVideo]);
+
+  const handleEnlarge = useCallback(() => {
+    setVideoState("large");
+  }, []);
+
+  const handleMinimize = useCallback(() => {
+    setVideoState("small");
+  }, []);
+
+  const handleCloseVideo = useCallback(() => {
+    setVideoState("idle");
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  }, []);
+
+  /* ── Render video element ── */
+  const renderVideoPlayer = (expanded: boolean) => {
+    if (!videoUrl) return null;
+
+    const classes = `w-full h-full object-cover ${expanded ? "rounded-card" : "rounded-[14px]"}`;
+
+    if (isEmbed) {
+      const ytId = getYouTubeId(videoUrl);
+      const vmId = getVimeoId(videoUrl);
+      if (ytId) {
+        return (
+          <iframe
+            src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=0&rel=0`}
+            className={classes}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            style={{ border: "none" }}
+          />
+        );
+      }
+      if (vmId) {
+        return (
+          <iframe
+            src={`https://player.vimeo.com/video/${vmId}?autoplay=1`}
+            className={classes}
+            allow="autoplay; fullscreen"
+            allowFullScreen
+            style={{ border: "none" }}
+          />
+        );
+      }
+    }
+
+    // Direct video file
+    return (
+      <video
+        ref={videoRef}
+        src={videoUrl}
+        className={classes}
+        controls={expanded}
+        muted={false}
+        playsInline
+        loop
+      />
+    );
+  };
 
   return (
     <section
@@ -27,8 +134,39 @@ export function HeroBanner(props: any) {
     >
       <div className="grain-overlay" />
 
+      {/* ── ENLARGED VIDEO OVERLAY ── */}
+      {videoState === "large" && (
+        <div
+          className="absolute inset-0 z-[50] flex items-center justify-center p-6 md:p-10"
+          style={{ background: "rgba(14,14,16,0.92)" }}
+        >
+          <div className="relative w-full max-w-[1100px] aspect-video rounded-card overflow-hidden">
+            {renderVideoPlayer(true)}
+
+            {/* Minimize overlay on hover */}
+            <div
+              className="video-overlay"
+              onClick={handleMinimize}
+            >
+              <span className="video-overlay-label">
+                <Minimize2 size={16} /> Minimize
+              </span>
+            </div>
+          </div>
+
+          {/* Close button */}
+          <button
+            onClick={handleCloseVideo}
+            className="absolute top-6 right-6 w-10 h-10 rounded-full flex items-center justify-center text-white/60 hover:text-white border border-white/20 hover:border-white/40 transition-all"
+            style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(10px)" }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row min-h-[75vh] relative z-[2]">
-        {/* Left side */}
+        {/* ── LEFT SIDE ── */}
         <div className="w-full md:w-[45%] p-8 md:p-10 flex flex-col justify-between">
           <div>
             <ScrollReveal>
@@ -45,13 +183,13 @@ export function HeroBanner(props: any) {
             )}
           </div>
 
-          {/* Scattered tags */}
+          {/* ── Specialty tags — larger, organic, fill the space ── */}
           {tags.length > 0 && (
-            <div className="flex flex-wrap gap-2.5 max-w-[500px] pt-6">
+            <div className="flex flex-wrap items-center gap-2 md:gap-3 pt-8 pb-4">
               {tags.map((tag: string, i: number) => (
-                <ScrollReveal key={tag} delay={0.1 + i * 0.05}>
+                <ScrollReveal key={tag} delay={0.08 + i * 0.04}>
                   <span
-                    className="inline-block px-4 py-2 rounded-full text-[13px] text-white/70 border border-white/20 backdrop-blur-sm hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all cursor-default"
+                    className={`inline-block px-4 md:px-5 py-2 md:py-2.5 rounded-full ${TAG_SIZES[i % TAG_SIZES.length]} text-white/75 border border-white/20 backdrop-blur-sm hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all cursor-default whitespace-nowrap`}
                     style={{
                       transform: `rotate(${TAG_ROTATIONS[i % TAG_ROTATIONS.length]}deg)`,
                       background: "rgba(255,255,255,0.04)",
@@ -65,7 +203,7 @@ export function HeroBanner(props: any) {
           )}
         </div>
 
-        {/* Right side — Hero image */}
+        {/* ── RIGHT SIDE — Hero image + video thumbnail ── */}
         <div className="w-full md:w-[55%] relative p-0 md:pr-5 md:pb-5 min-h-[400px] md:min-h-[500px]">
           <div className="w-full h-full rounded-card overflow-hidden relative">
             {heroImage ? (
@@ -85,27 +223,55 @@ export function HeroBanner(props: any) {
               </div>
             )}
 
-            {showPlayBadge && <RotatingBadge />}
+            {/* ── Video thumbnail frame (bottom-right) ── */}
+            <div className="absolute bottom-5 right-5 z-[6]">
+              {/* Play badge — positioned on top-left of video thumbnail */}
+              {showPlayBadge && hasVideo && videoState === "idle" && (
+                <div
+                  className="absolute -top-12 -left-12 z-[15]"
+                  onClick={handlePlayClick}
+                >
+                  <RotatingBadge />
+                </div>
+              )}
 
-            {/* Secondary thumbnail */}
-            {secondaryThumbnail && (
-              <div className="absolute bottom-5 right-5 w-60 h-40 rounded-[14px] overflow-hidden border-2 border-white/10 shadow-2xl z-[6]">
-                <Image
-                  src={urlFor(secondaryThumbnail).width(480).height(320).url()}
-                  alt="Secondary thumbnail"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            )}
-            {!secondaryThumbnail && (
-              <div
-                className="absolute bottom-5 right-5 w-60 h-40 rounded-[14px] overflow-hidden border-2 border-white/10 shadow-2xl z-[6] flex items-center justify-center text-white/20 text-xs"
-                style={{ background: "linear-gradient(135deg, #1a2a1a, #2a3a2a)" }}
-              >
-                480×320 — Video Thumbnail
-              </div>
-            )}
+              {videoState === "small" ? (
+                /* Video playing in small thumbnail */
+                <div className="w-60 h-40 md:w-72 md:h-48 rounded-[14px] overflow-hidden border-2 border-white/20 shadow-2xl relative">
+                  {renderVideoPlayer(false)}
+
+                  {/* Enlarge overlay on hover */}
+                  <div
+                    className="video-overlay"
+                    onClick={handleEnlarge}
+                  >
+                    <span className="video-overlay-label">
+                      <Maximize2 size={14} /> Enlarge
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                /* Static thumbnail */
+                secondaryThumbnail ? (
+                  <div className="w-60 h-40 md:w-72 md:h-48 rounded-[14px] overflow-hidden border-2 border-white/10 shadow-2xl">
+                    <Image
+                      src={urlFor(secondaryThumbnail).width(480).height(320).url()}
+                      alt="Video thumbnail"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="w-60 h-40 md:w-72 md:h-48 rounded-[14px] overflow-hidden border-2 border-white/10 shadow-2xl flex items-center justify-center text-white/20 text-xs"
+                    style={{ background: "linear-gradient(135deg, #1a2a1a, #2a3a2a)" }}
+                    onClick={hasVideo ? handlePlayClick : undefined}
+                  >
+                    {hasVideo ? "Click play to watch" : "480×320 — Video Thumbnail"}
+                  </div>
+                )
+              )}
+            </div>
           </div>
         </div>
       </div>
