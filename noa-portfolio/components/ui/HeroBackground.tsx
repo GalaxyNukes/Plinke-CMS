@@ -138,7 +138,7 @@ export function HeroBackground({
 
     function draw(now: number) {
       animId = requestAnimationFrame(draw);
-      if (!visible || now - lastFrame < TARGET_MS) return;
+      if (!visible || now - lastFrame < TARGET_MS || !ctx) return;
       lastFrame = now;
 
       ctx.clearRect(0, 0, W, H);
