@@ -10,6 +10,15 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
+/** Sanitise a value that will be embedded inside a CSS :root {} block.
+ *  Only allow valid hex colours — strip anything else entirely. */
+function safeCssHex(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  // Strict: must be exactly #rrggbb or #rrggbbaa
+  if (/^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(value)) return value;
+  return null;
+}
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   let themeStyle = "";
   try {
@@ -17,12 +26,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     const settings = await client.fetch(siteSettingsQuery);
     if (settings?.theme) {
       const t = settings.theme;
-      themeStyle = `:root {
-        ${t.bgDark?.hex ? `--bg-dark: ${t.bgDark.hex};` : ""}
-        ${t.bgLight?.hex ? `--bg-light: ${t.bgLight.hex};` : ""}
-        ${t.accent?.hex ? `--accent: ${t.accent.hex};` : ""}
-        ${t.accentSecondary?.hex ? `--accent-secondary: ${t.accentSecondary.hex};` : ""}
-      }`;
+      const vars: string[] = [];
+      const bgDark          = safeCssHex(t.bgDark?.hex);
+      const bgLight         = safeCssHex(t.bgLight?.hex);
+      const accent          = safeCssHex(t.accent?.hex);
+      const accentSecondary = safeCssHex(t.accentSecondary?.hex);
+      if (bgDark)          vars.push(`--bg-dark: ${bgDark};`);
+      if (bgLight)         vars.push(`--bg-light: ${bgLight};`);
+      if (accent)          vars.push(`--accent: ${accent};`);
+      if (accentSecondary) vars.push(`--accent-secondary: ${accentSecondary};`);
+      if (vars.length) themeStyle = `:root { ${vars.join(" ")} }`;
     }
   } catch (e) {
     // CMS not connected yet — defaults from globals.css are used

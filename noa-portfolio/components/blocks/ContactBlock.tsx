@@ -3,6 +3,14 @@
 import { Mail, Download } from "lucide-react";
 import { ScrollReveal } from "../ui/ScrollReveal";
 
+/** Only allow safe URL schemes from CMS-provided links. */
+function safeHref(url: unknown, fallback = "#"): string {
+  if (typeof url !== "string" || !url.trim()) return fallback;
+  const lower = url.trim().toLowerCase();
+  if (lower.startsWith("mailto:") || lower.startsWith("https://") || lower.startsWith("http://") || lower.startsWith("/") || lower.startsWith("#")) return url.trim();
+  return fallback;
+}
+
 export function ContactBlock(props: any) {
   const {
     heading = "Let's make something awesome",
@@ -41,7 +49,7 @@ export function ContactBlock(props: any) {
         <ScrollReveal delay={0.1}>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <a
-              href={ctaLink}
+              href={safeHref(ctaLink, "mailto:hello@noaplinke.com")}
               className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-sm font-bold uppercase tracking-wider transition-all hover:scale-[1.03] hover:bg-white"
               style={{ background: "var(--accent)", color: "var(--bg-dark)" }}
             >

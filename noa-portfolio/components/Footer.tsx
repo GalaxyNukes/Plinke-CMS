@@ -1,5 +1,13 @@
 import { Linkedin, Youtube, Twitter } from "lucide-react";
 
+/** Only allow safe URL schemes from CMS-provided links. */
+function safeHref(url: unknown, fallback = "#"): string {
+  if (typeof url !== "string" || !url.trim()) return fallback;
+  const lower = url.trim().toLowerCase();
+  if (lower.startsWith("https://") || lower.startsWith("http://") || lower.startsWith("/") || lower.startsWith("#")) return url.trim();
+  return fallback;
+}
+
 interface FooterProps {
   settings: any;
 }
@@ -29,7 +37,7 @@ export function Footer({ settings }: FooterProps) {
               return (
                 <a
                   key={s.platform}
-                  href={s.url}
+                  href={safeHref(s.url)}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={s.platform}

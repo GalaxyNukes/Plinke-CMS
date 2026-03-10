@@ -8,6 +8,14 @@ import { ScrollReveal } from "../ui/ScrollReveal";
 import { RotatingBadge } from "../ui/RotatingBadge";
 import { HeroBackground } from "../ui/HeroBackground";
 
+/** Only allow safe URL schemes from CMS-provided links. */
+function safeHref(url: unknown, fallback = "#"): string {
+  if (typeof url !== "string" || !url.trim()) return fallback;
+  const lower = url.trim().toLowerCase();
+  if (lower.startsWith("mailto:") || lower.startsWith("https://") || lower.startsWith("http://") || lower.startsWith("/") || lower.startsWith("#")) return url.trim();
+  return fallback;
+}
+
 const HeroCharacter3D = dynamic(
   () => import("../ui/HeroCharacter3D").then((mod) => mod.HeroCharacter3D),
   { ssr: false, loading: () => <div className="w-full h-full" /> }
@@ -131,13 +139,24 @@ export function HeroBanner(props: any) {
         e.preventDefault();
       }
     };
-    const onTouchStart = (e: TouchEvent) => { touchStartY = e.touches[0].clientY; };
+    const onTouchStart = (e: TouchEvent) => {
+      // Only arm if the hero is actually covering the top portion of the screen
+      if (!heroRef.current) return;
+      const rect = heroRef.current.getBoundingClientRect();
+      if (rect.top < window.innerHeight * 0.5 && rect.bottom > 0) {
+        touchStartY = e.touches[0].clientY;
+      } else {
+        touchStartY = -1; // sentinel: don't trigger
+      }
+    };
     const onTouchMove  = (e: TouchEvent) => {
+      if (touchStartY < 0) return; // hero not in view when touch started
       if (!heroRef.current) return;
       const rect = heroRef.current.getBoundingClientRect();
       if (rect.bottom <= 0 || rect.top >= window.innerHeight) return;
       const dy = touchStartY - e.touches[0].clientY;
-      if (phaseRef.current === "idle" && dy > 4) {
+      // 40px threshold — filters out accidental taps and small scrolls
+      if (phaseRef.current === "idle" && dy > 40) {
         e.preventDefault();
         lockScroll();
         commitPhase("expanding");
@@ -153,6 +172,10 @@ export function HeroBanner(props: any) {
       window.removeEventListener("wheel",      onWheel);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove",  onTouchMove);
+      // If we unmount mid-expansion (e.g. route change), release the scroll lock
+      if (phaseRef.current !== "idle") {
+        unlockScroll();
+      }
     };
   }, [hasThumb]);
 

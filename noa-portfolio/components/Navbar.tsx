@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
@@ -13,6 +13,13 @@ export function Navbar({ settings }: NavbarProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const isHomePage = pathname === "/";
+
+  // Close mobile menu on Escape
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
 
   const navLinks = settings?.navLinks || [
     { label: "Home", href: "#home" },
