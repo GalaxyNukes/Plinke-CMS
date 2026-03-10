@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-// @ts-ignore — Three.js example imports
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { GLTFLoader } from "three-stdlib";
 
 interface HeroCharacter3DProps {
   modelUrl?: string | null;
@@ -34,6 +33,11 @@ export function HeroCharacter3D({
     let animId = 0;
     let mixer: THREE.AnimationMixer | null = null;
     let headBone: THREE.Bone | null = null;
+
+    // Proxy Sanity CDN URLs to avoid CORS on production
+    const resolvedModelUrl = modelUrl
+      ? `/api/proxy-glb?url=${encodeURIComponent(modelUrl)}`
+      : null;
 
     // ── Scene ──
     const scene = new THREE.Scene();
@@ -122,10 +126,10 @@ export function HeroCharacter3D({
     scene.add(particles);
 
     // ── Load Model or Build Placeholder ──
-    if (modelUrl) {
+    if (resolvedModelUrl) {
       const loader = new GLTFLoader();
       loader.load(
-        modelUrl,
+        resolvedModelUrl,
         (gltf: any) => {
           const model = gltf.scene;
 
