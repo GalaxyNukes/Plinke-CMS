@@ -268,8 +268,15 @@ export function HeroCharacter3D({
 
     // ── Animation Loop ──
     const clock = new THREE.Clock();
-    const headTargetQuat = new THREE.Quaternion();
-    const lookAtEuler = new THREE.Euler();
+
+    // Persistent cursor offset quaternion — the key fix.
+    // mixer.update() resets headBone.quaternion to the animation pose every frame,
+    // so slerpng on the bone itself never accumulates. Instead we maintain a
+    // separate offset that builds up smoothly, then stamp it on top of the
+    // freshly-animated pose each frame.
+    const cursorOffset = new THREE.Quaternion();
+    const targetOffset = new THREE.Quaternion();
+    const lookAtEuler  = new THREE.Euler();
 
     function animate() {
       const delta = clock.getDelta();
@@ -280,28 +287,42 @@ export function HeroCharacter3D({
         mixer.update(delta);
       }
 
-      // Head tracking — applied AFTER the animation mixer updates
+      // Head tracking — applied AFTER mixer so we read the correct anim pose
       if (headBone) {
-        // Calculate look-at rotation from cursor
-        const maxRotY = 0.5 * headTrackIntensity;
-        const maxRotX = 0.3 * headTrackIntensity;
-        lookAtEuler.set(
-          -mouseRef.current.y * maxRotX,
-          mouseRef.current.x * maxRotY,
-          0,
-          "XYZ"
-        );
-        headTargetQuat.setFromEuler(lookAtEuler);
-
         if (mixer) {
-          // GLB model: apply cursor rotation ON TOP of the idle animation
-          const currentAnimQuat = headBone.quaternion.clone();
-          currentAnimQuat.multiply(headTargetQuat);
-          headBone.quaternion.slerp(currentAnimQuat, 0.08);
+          // 1. Snapshot animated pose (mixer just wrote this)
+          const animPose = headBone.quaternion.clone();
+
+          // 2. Build desired cursor offset — YXZ order feels most natural for heads
+          const maxRotY = 0.65 * headTrackIntensity;
+          const maxRotX = 0.40 * headTrackIntensity;
+          lookAtEuler.set(
+            -mouseRef.current.y * maxRotX,
+             mouseRef.current.x * maxRotY,
+            0,
+            "YXZ"
+          );
+          targetOffset.setFromEuler(lookAtEuler);
+
+          // 3. Smoothly chase the target — this value PERSISTS across frames
+          cursorOffset.slerp(targetOffset, 0.10);
+
+          // 4. Combine: animated base × cursor offset
+          headBone.quaternion.copy(animPose).multiply(cursorOffset);
         } else {
-          // Placeholder robot: apply rotation directly with idle float
+          // Placeholder robot
+          const maxRotY = 0.65 * headTrackIntensity;
+          const maxRotX = 0.40 * headTrackIntensity;
+          lookAtEuler.set(
+            -mouseRef.current.y * maxRotX,
+             mouseRef.current.x * maxRotY,
+            0,
+            "YXZ"
+          );
+          targetOffset.setFromEuler(lookAtEuler);
+          cursorOffset.slerp(targetOffset, 0.08);
           headBone.position.y = 0.3 + Math.sin(elapsed * 1.2) * 0.08;
-          headBone.quaternion.slerp(headTargetQuat, 0.06);
+          headBone.quaternion.copy(cursorOffset);
         }
       }
 
