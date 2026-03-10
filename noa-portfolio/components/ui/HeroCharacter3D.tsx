@@ -269,13 +269,13 @@ export function HeroCharacter3D({
     // ── Animation Loop ──
     const clock = new THREE.Clock();
 
-    // Two persistent quaternions that accumulate across frames.
-    // cursorOffset smoothly chases targetOffset — because mixer.update()
-    // resets headBone.quaternion every frame, we can never slerp on the bone
-    // directly. We maintain the offset separately and stamp it on top.
-    const cursorOffset = new THREE.Quaternion();
-    const targetOffset = new THREE.Quaternion();
-    const lookAtEuler  = new THREE.Euler();
+    // Persistent quaternions — only cursorOffset needs to accumulate across frames.
+    // parentWorldQuat + localTarget are reused each frame to avoid GC pressure.
+    const cursorOffset   = new THREE.Quaternion(); // smoothly chases target
+    const localTarget    = new THREE.Quaternion(); // target in bone-local space
+    const worldOffset    = new THREE.Quaternion(); // desired rotation in world space
+    const parentWorldQuat = new THREE.Quaternion();
+    const lookAtEuler    = new THREE.Euler();
 
     function animate() {
       const delta = clock.getDelta();
@@ -284,35 +284,73 @@ export function HeroCharacter3D({
       if (mixer) mixer.update(delta);
 
       if (headBone) {
-        // Mouse coords are window-normalised: (-1,-1) = bottom-left, (1,1) = top-right.
-        // Clamp to [-1,1] so the head never snaps to extreme angles.
-        const cx = Math.max(-1, Math.min(1, mouseRef.current.x));
-        const cy = Math.max(-1, Math.min(1, mouseRef.current.y));
-
-        // Rotation limits (radians). YXZ order: yaw around world-Y first,
-        // then pitch around local-X — exactly how a human head moves.
-        const maxRotY = 0.65 * headTrackIntensity; // left/right
-        const maxRotX = 0.50 * headTrackIntensity; // up/down
-
-        // cx > 0 = cursor right  → look right (+Y rotation)
-        // cy > 0 = cursor above  → look up   (−X rotation for standard rigs)
-        lookAtEuler.set(
-          -cy * maxRotX,
-           cx * maxRotY,
-          0,
-          "YXZ"
-        );
-        targetOffset.setFromEuler(lookAtEuler);
-
-        // Slerp factor 0.12 ≈ smooth 180ms lag — feels alive without jitter
-        cursorOffset.slerp(targetOffset, 0.12);
-
         if (mixer) {
-          // GLB with animation: snapshot animated pose, then layer offset on top
+          // ── Snapshot animated pose (mixer just wrote this) ──
           const animPose = headBone.quaternion.clone();
+
+          // ── Clamp cursor to [-1, 1] ──
+          const cx = Math.max(-1, Math.min(1, mouseRef.current.x));
+          const cy = Math.max(-1, Math.min(1, mouseRef.current.y));
+
+          // ── Build target rotation in WORLD space ──
+          // This is the critical fix: euler rotations built in world space
+          // mean "rotate around world-Y (yaw)" and "rotate around world-X (pitch)",
+          // which is what "turn left/right" and "look up/down" actually mean
+          // regardless of how the bone's local axes are oriented.
+          //
+          // The reason the previous approach produced a 45° tilt is that
+          // applying euler rotations as LOCAL bone rotations assumes the bone's
+          // local X/Y axes are aligned with world axes — but with 5 neck bones
+          // in the parent chain, the local axes are heavily rotated. So
+          // "rotate around local Y" was not "turn left" at all.
+          const maxRotY = 0.65 * headTrackIntensity; // yaw (left/right)
+          const maxRotX = 0.50 * headTrackIntensity; // pitch (up/down)
+          lookAtEuler.set(
+            -cy * maxRotX,  // cy>0 = cursor above centre = look up = -X world rotation
+             cx * maxRotY,  // cx>0 = cursor right of centre = look right = +Y world rotation
+            0,
+            "YXZ"           // yaw first, then pitch — natural head motion order
+          );
+          worldOffset.setFromEuler(lookAtEuler);
+
+          // ── Convert world-space rotation to bone-local space ──
+          // The parent chain (neck_03 → neck_02 → ... → spine) has an accumulated
+          // world quaternion P. The bone's world quaternion = P * localQuat.
+          // We want to PRE-apply worldOffset in world space:
+          //   desired worldQuat = worldOffset * P * animPose
+          // Solving for the new local quaternion:
+          //   localQuat = P^-1 * worldOffset * P * animPose
+          // The local OFFSET (on top of animPose) is therefore:
+          //   localOffset = P^-1 * worldOffset * P
+          //
+          // Force world matrices current after mixer.update() wrote local transforms.
+          // (Three.js only recalculates world matrices during renderer.render(),
+          // so we must do it manually here before calling getWorldQuaternion.)
+          scene.updateMatrixWorld(false);
+          if (headBone.parent) {
+            headBone.parent.getWorldQuaternion(parentWorldQuat);
+          } else {
+            parentWorldQuat.identity();
+          }
+          // localOffset = P^-1 * worldOffset * P
+          localTarget
+            .copy(parentWorldQuat).invert()  // P^-1
+            .multiply(worldOffset)            // P^-1 * worldOffset
+            .multiply(parentWorldQuat);       // P^-1 * worldOffset * P
+
+          // ── Smooth chase — persists across frames ──
+          cursorOffset.slerp(localTarget, 0.12);
+
+          // ── Final pose: anim base * local cursor offset ──
           headBone.quaternion.copy(animPose).multiply(cursorOffset);
+
         } else {
-          // Placeholder robot: apply directly + idle float
+          // Placeholder robot — no parent chain complexity, apply directly
+          const cx = Math.max(-1, Math.min(1, mouseRef.current.x));
+          const cy = Math.max(-1, Math.min(1, mouseRef.current.y));
+          lookAtEuler.set(-cy * 0.50 * headTrackIntensity, cx * 0.65 * headTrackIntensity, 0, "YXZ");
+          worldOffset.setFromEuler(lookAtEuler);
+          cursorOffset.slerp(worldOffset, 0.10);
           headBone.position.y = 0.3 + Math.sin(elapsed * 1.2) * 0.08;
           headBone.quaternion.copy(cursorOffset);
         }
