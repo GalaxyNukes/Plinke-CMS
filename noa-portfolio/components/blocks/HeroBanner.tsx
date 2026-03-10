@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { urlFor } from "@/sanity/lib/image";
 import { ScrollReveal } from "../ui/ScrollReveal";
 import { RotatingBadge } from "../ui/RotatingBadge";
 import { HeroBackground } from "../ui/HeroBackground";
-import { Maximize2 } from "lucide-react";
 
 const HeroCharacter3D = dynamic(
   () => import("../ui/HeroCharacter3D").then((mod) => mod.HeroCharacter3D),
@@ -48,16 +47,16 @@ function resolveColor(c: any): string | undefined {
 let _savedScrollY = 0;
 function lockScroll() {
   _savedScrollY = window.scrollY;
-  document.body.style.overflow  = "hidden";
-  document.body.style.position  = "fixed";
-  document.body.style.top       = `-${_savedScrollY}px`;
-  document.body.style.width     = "100%";
+  document.body.style.overflow = "hidden";
+  document.body.style.position = "fixed";
+  document.body.style.top      = `-${_savedScrollY}px`;
+  document.body.style.width    = "100%";
 }
 function unlockScroll() {
-  document.body.style.overflow  = "";
-  document.body.style.position  = "";
-  document.body.style.top       = "";
-  document.body.style.width     = "";
+  document.body.style.overflow = "";
+  document.body.style.position = "";
+  document.body.style.top      = "";
+  document.body.style.width    = "";
   window.scrollTo(0, _savedScrollY);
 }
 
@@ -65,8 +64,8 @@ type Phase = "idle" | "expanding" | "expanded";
 
 export function HeroBanner(props: any) {
   const {
-    heading = "Animation that hits different",
-    subtitle = "",
+    heading     = "Animation that hits different",
+    subtitle    = "",
     heroImage,
     heroVideo,
     heroDisplay = "image",
@@ -76,8 +75,7 @@ export function HeroBanner(props: any) {
     heroParticles,
     secondaryThumbnail,
     showPlayBadge = true,
-    autoplayVideo = false,
-    tags = [],
+    tags          = [],
   } = props;
 
   const bgPreset     = heroBackground?.preset ?? "dark";
@@ -89,48 +87,42 @@ export function HeroBanner(props: any) {
   const pSpeed       = heroParticles?.speed   ?? "normal";
   const pOpacity     = heroParticles?.opacity ?? 0.35;
 
-  const videoUrl    = getVideoUrl(heroVideo);
-  const hasVideo    = !!videoUrl;
-  const isEmbed     = hasVideo && isEmbedUrl(videoUrl!);
-  const hasThumb    = hasVideo || !!secondaryThumbnail;
+  const videoUrl = getVideoUrl(heroVideo);
+  const hasVideo = !!videoUrl;
+  const isEmbed  = hasVideo && isEmbedUrl(videoUrl!);
+  const hasThumb = hasVideo || !!secondaryThumbnail;
 
-  const [phase, setPhase]     = useState<Phase>("idle");
-  const phaseRef              = useRef<Phase>("idle");
-  const heroRef               = useRef<HTMLElement>(null);
-  // separate refs for small (muted autoplay) vs expanded (with controls)
-  const smallVideoRef         = useRef<HTMLVideoElement>(null);
-  const expandedVideoRef      = useRef<HTMLVideoElement>(null);
+  const [phase, setPhase]   = useState<Phase>("idle");
+  const phaseRef            = useRef<Phase>("idle");
+  const heroRef             = useRef<HTMLElement>(null);
 
-  // Manual fullscreen overlay (separate from scroll expansion)
-  const [overlayOpen, setOverlayOpen] = useState(false);
-  const overlayVideoRef = useRef<HTMLVideoElement>(null);
+  // ONE video element — always mounted, never remounted
+  // This is the key: keeping the same DOM node means playback never interrupts
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   function commitPhase(p: Phase) {
     phaseRef.current = p;
     setPhase(p);
   }
 
-  // ── Autoplay small thumbnail on mount ──
+  // Autoplay muted loop on mount
   useEffect(() => {
     if (!hasVideo || isEmbed) return;
-    // Small video autoplays muted as soon as component mounts
     const t = setTimeout(() => {
-      smallVideoRef.current?.play().catch(() => {});
+      videoRef.current?.play().catch(() => {});
     }, 300);
     return () => clearTimeout(t);
   }, [hasVideo, isEmbed]);
 
-  // ── Scroll intercept ──
+  // Scroll intercept
   useEffect(() => {
     if (!hasThumb) return;
-
     let touchStartY = 0;
 
     const onWheel = (e: WheelEvent) => {
       if (!heroRef.current) return;
       const rect = heroRef.current.getBoundingClientRect();
-      if (rect.bottom <= 0 || rect.top >= window.innerHeight) return; // hero off-screen
-
+      if (rect.bottom <= 0 || rect.top >= window.innerHeight) return;
       if (phaseRef.current === "idle" && e.deltaY > 0) {
         e.preventDefault();
         lockScroll();
@@ -139,7 +131,6 @@ export function HeroBanner(props: any) {
         e.preventDefault();
       }
     };
-
     const onTouchStart = (e: TouchEvent) => { touchStartY = e.touches[0].clientY; };
     const onTouchMove  = (e: TouchEvent) => {
       if (!heroRef.current) return;
@@ -165,31 +156,23 @@ export function HeroBanner(props: any) {
     };
   }, [hasThumb]);
 
-  // ── Expansion → unlock after transition completes ──
+  // Unlock scroll after CSS transition finishes
   useEffect(() => {
     if (phase !== "expanding") return;
     const id = setTimeout(() => {
       commitPhase("expanded");
       unlockScroll();
-      // Play expanded video (direct files only — iframes autoplay via src param)
-      if (!isEmbed) expandedVideoRef.current?.play().catch(() => {});
     }, 700);
     return () => clearTimeout(id);
-  }, [phase, isEmbed]);
+  }, [phase]);
 
-  // ── Reset when hero fully exits viewport ──
+  // Reset when hero fully exits viewport
   useEffect(() => {
     if (!hasThumb) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting && phaseRef.current !== "idle") {
           commitPhase("idle");
-          if (expandedVideoRef.current) {
-            expandedVideoRef.current.pause();
-            expandedVideoRef.current.currentTime = 0;
-          }
-          // Resume small autoplay
-          setTimeout(() => smallVideoRef.current?.play().catch(() => {}), 50);
         }
       },
       { threshold: 0 }
@@ -198,31 +181,21 @@ export function HeroBanner(props: any) {
     return () => observer.disconnect();
   }, [hasThumb]);
 
-  const openOverlay = useCallback(() => {
-    setOverlayOpen(true);
-    setTimeout(() => overlayVideoRef.current?.play().catch(() => {}), 100);
-  }, []);
-  const closeOverlay = useCallback(() => {
-    setOverlayOpen(false);
-    if (overlayVideoRef.current) { overlayVideoRef.current.pause(); overlayVideoRef.current.currentTime = 0; }
-  }, []);
-
   const isExpanding = phase === "expanding";
   const isExpanded  = phase === "expanded";
   const thumbActive = isExpanding || isExpanded;
 
-  // Thumbnail poster image URL
   const posterUrl = secondaryThumbnail
     ? urlFor(secondaryThumbnail).width(800).height(450).url()
     : undefined;
 
-  // ── Full-width background video (heroDisplay === "video") ──
+  // Background video (heroDisplay === "video")
   function renderHeroVideo() {
     if (!heroRightVideo) return null;
     const rvUrl = heroRightVideo.videoFile?.asset?.url || heroRightVideo.embedUrl || null;
     if (!rvUrl) return null;
-    const rvEmbed = isEmbedUrl(rvUrl);
-    const rvAuto  = heroRightVideo.autoplay !== false;
+    const rvEmbed  = isEmbedUrl(rvUrl);
+    const rvAuto   = heroRightVideo.autoplay !== false;
     const rvPoster = heroRightVideo.posterImage
       ? urlFor(heroRightVideo.posterImage).width(1400).height(900).url()
       : undefined;
@@ -233,18 +206,6 @@ export function HeroBanner(props: any) {
       if (vmId) return <iframe src={`https://player.vimeo.com/video/${vmId}?autoplay=${rvAuto?1:0}&muted=1&loop=1&background=1`} className="absolute inset-0 w-full h-full" allow="autoplay; fullscreen" style={{ border:"none" }} />;
     }
     return <video src={rvUrl} className="absolute inset-0 w-full h-full object-cover object-center" autoPlay={rvAuto} muted loop playsInline poster={rvPoster} />;
-  }
-
-  // ── Expanded video content ──
-  function renderExpandedVideo() {
-    if (!videoUrl) return null;
-    if (isEmbed) {
-      const ytId = getYouTubeId(videoUrl);
-      const vmId = getVimeoId(videoUrl);
-      if (ytId) return <iframe src={`https://www.youtube.com/embed/${ytId}?autoplay=${isExpanded?1:0}&mute=0&rel=0`} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen style={{ border:"none" }} />;
-      if (vmId) return <iframe src={`https://player.vimeo.com/video/${vmId}?autoplay=${isExpanded?1:0}`} className="w-full h-full" allow="autoplay; fullscreen" allowFullScreen style={{ border:"none" }} />;
-    }
-    return <video ref={expandedVideoRef} src={videoUrl} className="w-full h-full object-cover" controls playsInline loop />;
   }
 
   return (
@@ -261,7 +222,7 @@ export function HeroBanner(props: any) {
         density={pDensity} speed={pSpeed} particleOpacity={pOpacity}
       />
 
-      {/* z-1: Full-width visual (image / video / 3D) */}
+      {/* z-1: Full-width visual */}
       {heroDisplay === "3d" && (
         <div className="absolute inset-0 z-[1]">
           <HeroCharacter3D
@@ -285,82 +246,101 @@ export function HeroBanner(props: any) {
       )}
 
       {/* z-2: Left readability gradient */}
-      <div className="absolute inset-0 z-[2] pointer-events-none"
-        style={{ background: "linear-gradient(to right, rgba(14,14,16,0.85) 0%, rgba(14,14,16,0.60) 38%, rgba(14,14,16,0.15) 62%, transparent 100%)" }} />
+      <div
+        className="absolute inset-0 z-[2] pointer-events-none"
+        style={{ background: "linear-gradient(to right, rgba(14,14,16,0.85) 0%, rgba(14,14,16,0.60) 38%, rgba(14,14,16,0.15) 62%, transparent 100%)" }}
+      />
 
       {/* z-3: Grain */}
       <div className="grain-overlay" style={{ zIndex: 3 }} />
 
-      {/* z-10: Expanding thumbnail — covers entire hero on expand */}
+      {/* ── z-10: THE THUMBNAIL CARD ──────────────────────────────────────────
+          Always anchored to bottom:0, right:0.
+          Transitions width + height only → grows from bottom-right corner.
+          One single <video> element lives here — never remounted — so
+          playback is never interrupted by the expansion.
+      ────────────────────────────────────────────────────────────────────── */}
       {hasThumb && (
         <div
           style={{
             position:     "absolute",
-            // idle  → small card bottom-right corner
-            // expand → full inset-0 covering entire hero
-            top:          thumbActive ? 0      : "auto",
-            left:         thumbActive ? 0      : "auto",
-            bottom:       thumbActive ? 0      : "20px",
-            right:        thumbActive ? 0      : "20px",
-            width:        thumbActive ? "100%" : "288px",
-            height:       thumbActive ? "100%" : "192px",
-            borderRadius: thumbActive ? "16px" : "14px",
+            bottom:       thumbActive ? 0       : "20px",
+            right:        thumbActive ? 0       : "20px",
+            // Width/height grow from 288×192 → 100%×100%
+            // Because bottom+right are the fixed anchors, expansion goes
+            // upward and leftward — i.e. from the bottom-right corner.
+            width:        thumbActive ? "100%"  : "288px",
+            height:       thumbActive ? "100%"  : "192px",
+            borderRadius: thumbActive ? "16px"  : "14px",
             overflow:     "hidden",
-            transition:   "top 0.65s cubic-bezier(0.4,0,0.2,1), left 0.65s cubic-bezier(0.4,0,0.2,1), bottom 0.65s cubic-bezier(0.4,0,0.2,1), right 0.65s cubic-bezier(0.4,0,0.2,1), width 0.65s cubic-bezier(0.4,0,0.2,1), height 0.65s cubic-bezier(0.4,0,0.2,1), border-radius 0.65s cubic-bezier(0.4,0,0.2,1)",
-            border:       thumbActive ? "none" : "2px solid rgba(255,255,255,0.15)",
-            boxShadow:    thumbActive ? "none" : "0 20px 60px rgba(0,0,0,0.5)",
-            zIndex:       10,
+            transition:   [
+              "width 0.65s cubic-bezier(0.4,0,0.2,1)",
+              "height 0.65s cubic-bezier(0.4,0,0.2,1)",
+              "bottom 0.65s cubic-bezier(0.4,0,0.2,1)",
+              "right 0.65s cubic-bezier(0.4,0,0.2,1)",
+              "border-radius 0.65s cubic-bezier(0.4,0,0.2,1)",
+            ].join(", "),
+            border:    thumbActive ? "none" : "2px solid rgba(255,255,255,0.15)",
+            boxShadow: thumbActive ? "none" : "0 20px 60px rgba(0,0,0,0.5)",
+            zIndex:    10,
           }}
         >
-          {/* Small state: muted autoplay loop video (or poster image) */}
-          {!thumbActive && (
+          {/* ── Direct video file: single <video> always in DOM ── */}
+          {hasVideo && !isEmbed && (
+            <video
+              ref={videoRef}
+              src={videoUrl!}
+              className="w-full h-full object-cover"
+              // Always muted, no controls, looping silently
+              muted
+              autoPlay
+              loop
+              playsInline
+              poster={posterUrl}
+              // Disable any browser-injected controls on mobile
+              disablePictureInPicture
+              disableRemotePlayback
+            />
+          )}
+
+          {/* ── Embed (YouTube/Vimeo): show poster in small state,
+                iframe in expanded state ── */}
+          {hasVideo && isEmbed && (
             <>
-              {hasVideo && !isEmbed ? (
-                <video
-                  ref={smallVideoRef}
-                  src={videoUrl!}
-                  className="w-full h-full object-cover"
-                  muted autoPlay loop playsInline
-                  poster={posterUrl}
-                />
+              {thumbActive ? (
+                (() => {
+                  const ytId = getYouTubeId(videoUrl!);
+                  const vmId = getVimeoId(videoUrl!);
+                  if (ytId) return <iframe src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&rel=0&controls=0`} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope" style={{ border:"none" }} />;
+                  if (vmId) return <iframe src={`https://player.vimeo.com/video/${vmId}?autoplay=1&muted=1&background=1`} className="w-full h-full" allow="autoplay; fullscreen" style={{ border:"none" }} />;
+                  return null;
+                })()
               ) : posterUrl ? (
-                <Image src={posterUrl} alt="Showreel thumbnail" fill className="object-cover" />
+                <Image src={posterUrl} alt="Showreel" fill className="object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center"
-                  style={{ background:"rgba(255,255,255,0.04)" }}>
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center"
-                    style={{ background:"var(--accent)" }}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path d="M3 2L11 7L3 12V2Z" fill="#0e0e10"/>
-                    </svg>
-                  </div>
-                </div>
+                <div className="w-full h-full" style={{ background:"rgba(255,255,255,0.04)" }} />
               )}
-              {/* Scroll to expand hint */}
-              <div className="absolute bottom-0 left-0 right-0 py-2 text-center text-white/50 text-[10px] font-medium uppercase tracking-widest pointer-events-none"
-                style={{ background:"linear-gradient(to top, rgba(0,0,0,0.55), transparent)" }}>
-                Scroll to expand
-              </div>
             </>
           )}
 
-          {/* Expanding / expanded state: full video with controls */}
-          {thumbActive && renderExpandedVideo()}
+          {/* ── Fallback: only a poster image, no video ── */}
+          {!hasVideo && posterUrl && (
+            <Image src={posterUrl} alt="Showreel thumbnail" fill className="object-cover" />
+          )}
 
-          {/* Enlarge button — top-left, shown when expanded */}
-          {isExpanded && hasVideo && (
-            <button
-              onClick={openOverlay}
-              className="absolute top-3 left-3 z-[15] flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold uppercase tracking-wide text-white transition-all hover:scale-105"
-              style={{ background:"rgba(0,0,0,0.5)", backdropFilter:"blur(10px)", border:"1px solid rgba(255,255,255,0.2)" }}
+          {/* "Scroll to expand" hint — only in idle state */}
+          {!thumbActive && (
+            <div
+              className="absolute bottom-0 left-0 right-0 py-2 text-center text-white/50 text-[10px] font-medium uppercase tracking-widest pointer-events-none"
+              style={{ background: "linear-gradient(to top, rgba(0,0,0,0.55), transparent)" }}
             >
-              <Maximize2 size={14} /> Enlarge
-            </button>
+              Scroll to expand
+            </div>
           )}
         </div>
       )}
 
-      {/* z-4: Content — fades to 0 opacity while thumbnail expands */}
+      {/* z-4: Text content — fades to 0 during expansion */}
       <div
         className="flex flex-col md:flex-row min-h-[75vh] relative"
         style={{
@@ -400,40 +380,18 @@ export function HeroBanner(props: any) {
           )}
         </div>
 
-        {/* RIGHT: space where the thumbnail lives (play badge only when idle) */}
+        {/* RIGHT: play badge anchor */}
         <div className="w-full md:w-[55%] relative min-h-[300px] md:min-h-[500px] flex items-end justify-end p-5">
           {showPlayBadge && hasVideo && phase === "idle" && (
-            <div className="absolute z-[15]" style={{ bottom:"calc(20px + 192px - 8px)", right:"calc(20px + 8px)" }}>
+            <div
+              className="absolute z-[15]"
+              style={{ bottom: "calc(20px + 192px - 8px)", right: "calc(20px + 8px)" }}
+            >
               <RotatingBadge />
             </div>
           )}
         </div>
       </div>
-
-      {/* z-50: Fullscreen overlay (Enlarge button) */}
-      {overlayOpen && (
-        <div className="absolute inset-0 z-[50] flex items-center justify-center p-6 md:p-10"
-          style={{ background:"rgba(14,14,16,0.92)" }}>
-          <div className="relative w-full max-w-[1100px] aspect-video rounded-card overflow-hidden">
-            {hasVideo && (isEmbed ? (
-              (() => {
-                const ytId = getYouTubeId(videoUrl!);
-                const vmId = getVimeoId(videoUrl!);
-                if (ytId) return <iframe src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=0&rel=0`} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen style={{ border:"none" }} />;
-                if (vmId) return <iframe src={`https://player.vimeo.com/video/${vmId}?autoplay=1`} className="w-full h-full" allow="autoplay; fullscreen" allowFullScreen style={{ border:"none" }} />;
-                return null;
-              })()
-            ) : (
-              <video ref={overlayVideoRef} src={videoUrl!} className="w-full h-full object-cover" controls playsInline loop autoPlay />
-            ))}
-          </div>
-          <button onClick={closeOverlay}
-            className="absolute top-6 right-6 w-10 h-10 rounded-full flex items-center justify-center text-white/60 hover:text-white border border-white/20 hover:border-white/40 transition-all"
-            style={{ background:"rgba(255,255,255,0.1)", backdropFilter:"blur(10px)" }}>
-            ✕
-          </button>
-        </div>
-      )}
     </section>
   );
 }
