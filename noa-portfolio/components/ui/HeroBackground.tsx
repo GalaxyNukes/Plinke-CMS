@@ -287,6 +287,7 @@ export function HeroBackground({
     ] as const;
 
     function drawRibbons(now: number) {
+      if (!ctx) return;
       const t = now / 1000 * spd;
       ctx.save();
       ctx.globalCompositeOperation = "screen";
@@ -332,6 +333,7 @@ export function HeroBackground({
     // "screen" blending gives the aurora / light-leak feel.
     // ─────────────────────────────────────────────
     function drawOrbs(now: number) {
+      if (!ctx) return;
       const t = now / 1000 * spd;
       ctx.save();
       ctx.globalCompositeOperation = "screen";
@@ -359,7 +361,7 @@ export function HeroBackground({
     // ─────────────────────────────────────────────
     let gridDrawn = false;
     function drawGrid() {
-      if (gridDrawn) return; // grid is static — draw once per resize
+      if (!ctx || gridDrawn) return; // grid is static — draw once per resize
       for (const dot of gridDots) {
         ctx.fillStyle = `rgba(${rgb},${dot.a})`;
         ctx.beginPath();
