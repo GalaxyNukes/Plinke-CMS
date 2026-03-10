@@ -17,6 +17,12 @@ export const pageQuery = groq`
             asset-> { _id, url, mimeType }
           }
         },
+        heroRightVideo {
+          ...,
+          videoFile {
+            asset-> { _id, url, mimeType }
+          }
+        },
         hero3dModel {
           ...,
           modelFile {
@@ -82,6 +88,12 @@ export const pageQuery = groq`
           videoFile {
             asset-> { _id, url, mimeType }
           }
+        }
+      },
+      _type == "contactBlock" => {
+        ...,
+        cvFile {
+          asset-> { _id, url, originalFilename }
         }
       }
     }

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { Menu, X } from "lucide-react";
 
 interface NavbarProps {
@@ -9,6 +11,9 @@ interface NavbarProps {
 
 export function Navbar({ settings }: NavbarProps) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const isHomePage = pathname === "/";
+
   const navLinks = settings?.navLinks || [
     { label: "Home", href: "#home" },
     { label: "Portfolio", href: "#portfolio" },
@@ -18,6 +23,14 @@ export function Navbar({ settings }: NavbarProps) {
   ];
   const email = settings?.email || "hello@noaplinke.com";
   const siteName = settings?.siteName || "Noa Plinke";
+
+  // On non-home pages, anchor links become /#section so the browser
+  // navigates to the homepage and then scrolls to the right section.
+  function resolveHref(href: string) {
+    if (!href) return "/";
+    if (href.startsWith("#") && !isHomePage) return `/${href}`;
+    return href;
+  }
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 px-5">
@@ -29,8 +42,8 @@ export function Navbar({ settings }: NavbarProps) {
           border: "1px solid rgba(255,255,255,0.06)",
         }}
       >
-        {/* Logo */}
-        <div className="flex items-center gap-2.5">
+        {/* Logo — always navigates to homepage */}
+        <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center font-display font-extrabold text-sm"
             style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-secondary))", color: "var(--bg-dark)" }}
@@ -40,14 +53,14 @@ export function Navbar({ settings }: NavbarProps) {
           <span className="font-display font-bold text-white text-base tracking-tight">
             {siteName.toUpperCase()}
           </span>
-        </div>
+        </Link>
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link: any) => (
             <a
               key={link.label}
-              href={link.href}
+              href={resolveHref(link.href)}
               className="text-white/60 hover:text-white text-sm font-medium transition-colors"
             >
               {link.label}
@@ -78,7 +91,7 @@ export function Navbar({ settings }: NavbarProps) {
           {navLinks.map((link: any) => (
             <a
               key={link.label}
-              href={link.href}
+              href={resolveHref(link.href)}
               onClick={() => setOpen(false)}
               className="text-white/70 hover:text-white text-base font-medium transition-colors"
             >

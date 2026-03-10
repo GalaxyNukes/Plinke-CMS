@@ -53,6 +53,7 @@ export function HeroBanner(props: any) {
     heroImage,
     heroVideo,
     heroDisplay = "image",
+    heroRightVideo,
     hero3dModel,
     secondaryThumbnail,
     showPlayBadge = true,
@@ -236,6 +237,63 @@ export function HeroBanner(props: any) {
                 modelScale={hero3dModel?.modelScale || 1.0}
                 headTrackIntensity={hero3dModel?.headTrackIntensity || 0.6}
               />
+            ) : heroDisplay === "video" && heroRightVideo ? (
+              (() => {
+                const rvUrl = heroRightVideo.videoFile?.asset?.url || heroRightVideo.embedUrl || null;
+                const rvEmbed = rvUrl && isEmbedUrl(rvUrl);
+                const rvAutoplay = heroRightVideo.autoplay !== false;
+                const posterUrl = heroRightVideo.posterImage
+                  ? urlFor(heroRightVideo.posterImage).width(1200).height(800).url()
+                  : undefined;
+
+                if (!rvUrl) {
+                  return (
+                    <div
+                      className="w-full h-full flex items-center justify-center text-white/20 text-sm"
+                      style={{ background: "linear-gradient(135deg, #0a0a1a, #1a1a3a, #0f2a3f)" }}
+                    >
+                      Upload a hero video in the CMS
+                    </div>
+                  );
+                }
+
+                if (rvEmbed) {
+                  const ytId = getYouTubeId(rvUrl);
+                  const vmId = getVimeoId(rvUrl);
+                  if (ytId) {
+                    return (
+                      <iframe
+                        src={`https://www.youtube.com/embed/${ytId}?autoplay=${rvAutoplay ? 1 : 0}&mute=1&loop=1&playlist=${ytId}&rel=0&controls=0`}
+                        className="w-full h-full object-cover"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope"
+                        style={{ border: "none" }}
+                      />
+                    );
+                  }
+                  if (vmId) {
+                    return (
+                      <iframe
+                        src={`https://player.vimeo.com/video/${vmId}?autoplay=${rvAutoplay ? 1 : 0}&muted=1&loop=1&background=1`}
+                        className="w-full h-full object-cover"
+                        allow="autoplay; fullscreen"
+                        style={{ border: "none" }}
+                      />
+                    );
+                  }
+                }
+
+                return (
+                  <video
+                    src={rvUrl}
+                    className="w-full h-full object-cover"
+                    autoPlay={rvAutoplay}
+                    muted
+                    loop
+                    playsInline
+                    poster={posterUrl}
+                  />
+                );
+              })()
             ) : heroImage ? (
               <Image
                 src={urlFor(heroImage).width(1200).height(800).url()}

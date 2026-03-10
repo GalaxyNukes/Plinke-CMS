@@ -33,15 +33,52 @@ export default defineType({
       name: "heroDisplay",
       title: "Hero Display Mode",
       type: "string",
-      description: "Choose between a static image or an interactive 3D character that follows the cursor",
+      description: "Choose what appears on the right side of the hero",
       options: {
         list: [
           { title: "Image", value: "image" },
+          { title: "Video (looping background)", value: "video" },
           { title: "3D Character (interactive)", value: "3d" },
         ],
         layout: "radio",
       },
       initialValue: "image",
+    }),
+    defineField({
+      name: "heroRightVideo",
+      title: "Hero Right Video",
+      type: "object",
+      description: "Video shown as the main hero visual on the right side",
+      hidden: ({ parent }: any) => parent?.heroDisplay !== "video",
+      fields: [
+        {
+          name: "videoFile",
+          title: "Upload Video File (mp4 / webm)",
+          type: "file",
+          options: { accept: "video/mp4,video/webm" },
+          description: "Recommended: short looping clip, ideally muted",
+        },
+        {
+          name: "embedUrl",
+          title: "Or Paste YouTube / Vimeo URL",
+          type: "url",
+          description: "Paste a YouTube or Vimeo URL to embed it",
+        },
+        {
+          name: "autoplay",
+          title: "Autoplay & Loop",
+          type: "boolean",
+          initialValue: true,
+          description: "Automatically play and loop the video (muted). Recommended for background videos.",
+        },
+        {
+          name: "posterImage",
+          title: "Poster / Fallback Image",
+          type: "image",
+          options: { hotspot: true },
+          description: "Shown while the video loads or on devices where autoplay is blocked",
+        },
+      ],
     }),
     defineField({
       name: "hero3dModel",

@@ -27,6 +27,20 @@ export default defineType({
       description: "Use mailto:your@email.com for email, or any URL",
     }),
     defineField({
+      name: "cvFile",
+      title: "CV / Resume File (optional)",
+      type: "file",
+      description: "Upload a PDF — shows a 'Download CV' button next to the email button",
+      options: { accept: ".pdf,.doc,.docx" },
+    }),
+    defineField({
+      name: "cvLabel",
+      title: "CV Button Label",
+      type: "string",
+      initialValue: "Download CV",
+      description: "Label for the CV download button",
+    }),
+    defineField({
       name: "backgroundColor",
       title: "Background",
       type: "string",
