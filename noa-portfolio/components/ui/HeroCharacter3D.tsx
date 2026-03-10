@@ -11,6 +11,8 @@ interface HeroCharacter3DProps {
   cameraHeight?: number;
   modelScale?: number;
   headTrackIntensity?: number;
+  /** When true the canvas is full-width; camera pans left so model stays on the right half */
+  fullWidthMode?: boolean;
 }
 
 export function HeroCharacter3D({
@@ -20,6 +22,7 @@ export function HeroCharacter3D({
   cameraHeight = 1.0,
   modelScale = 1.0,
   headTrackIntensity = 0.6,
+  fullWidthMode = false,
 }: HeroCharacter3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mouseRef = useRef({ x: 0, y: 0 });
@@ -41,13 +44,16 @@ export function HeroCharacter3D({
 
     // ── Scene ──
     const scene = new THREE.Scene();
+    // In fullWidthMode the canvas spans the full hero. Pan the camera left
+    // so the model appears on the right half — matching its original visual position.
+    const panX = fullWidthMode ? -2.5 : 0;
     const camera = new THREE.PerspectiveCamera(
       45,
       container.clientWidth / container.clientHeight,
       0.01,
       500
     );
-    camera.position.set(0, cameraHeight, cameraDistance);
+    camera.position.set(panX, cameraHeight, cameraDistance);
     camera.lookAt(0, cameraHeight * 0.6, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -100,30 +106,6 @@ export function HeroCharacter3D({
     const envTexture = pmremGenerator.fromScene(envScene).texture;
     scene.environment = envTexture;
     pmremGenerator.dispose();
-
-    // ── Floating Particles ──
-    const particleCount = 50;
-    const particlePositions = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount; i++) {
-      particlePositions[i * 3] = (Math.random() - 0.5) * 6;
-      particlePositions[i * 3 + 1] = (Math.random() - 0.5) * 5;
-      particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 4 - 1;
-    }
-    const particleGeo = new THREE.BufferGeometry();
-    particleGeo.setAttribute(
-      "position",
-      new THREE.BufferAttribute(particlePositions, 3)
-    );
-    const particleMat = new THREE.PointsMaterial({
-      color: 0xc9fb00,
-      size: 0.04,
-      transparent: true,
-      opacity: 0.3,
-      blending: THREE.AdditiveBlending,
-      sizeAttenuation: true,
-    });
-    const particles = new THREE.Points(particleGeo, particleMat);
-    scene.add(particles);
 
     // ── Load Model or Build Placeholder ──
     if (resolvedModelUrl) {
@@ -323,16 +305,6 @@ export function HeroCharacter3D({
         }
       }
 
-      // Particle drift
-      const positions = particles.geometry.attributes.position
-        .array as Float32Array;
-      for (let i = 0; i < positions.length; i += 3) {
-        positions[i + 1] += Math.sin(elapsed + i) * 0.0008;
-        positions[i] += Math.cos(elapsed * 0.5 + i) * 0.0004;
-      }
-      particles.geometry.attributes.position.needsUpdate = true;
-      particles.rotation.y = elapsed * 0.02;
-
       renderer.render(scene, camera);
       animId = requestAnimationFrame(animate);
     }
@@ -360,7 +332,7 @@ export function HeroCharacter3D({
         container.removeChild(renderer.domElement);
       }
     };
-  }, [modelUrl, headBoneName, cameraDistance, cameraHeight, modelScale, headTrackIntensity]);
+  }, [modelUrl, headBoneName, cameraDistance, cameraHeight, modelScale, headTrackIntensity, fullWidthMode]);
 
   return (
     <div ref={containerRef} className="w-full h-full relative" style={{ minHeight: "400px" }}>

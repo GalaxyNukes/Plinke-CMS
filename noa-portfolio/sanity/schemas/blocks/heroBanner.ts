@@ -179,6 +179,111 @@ export default defineType({
       ],
     }),
     defineField({
+      name: "heroBackground",
+      title: "Background",
+      type: "object",
+      description: "Controls the colour/gradient behind the hero content",
+      fields: [
+        {
+          name: "preset",
+          title: "Background Style",
+          type: "string",
+          options: {
+            list: [
+              { title: "Dark (default)", value: "dark" },
+              { title: "Gradient — Lime", value: "gradient-lime" },
+              { title: "Gradient — Purple", value: "gradient-purple" },
+              { title: "Gradient — Warm amber", value: "gradient-warm" },
+              { title: "Gradient — Cool blue", value: "gradient-cool" },
+              { title: "Gradient — Custom colours", value: "gradient-custom" },
+            ],
+            layout: "radio",
+          },
+          initialValue: "dark",
+        },
+        {
+          name: "color1",
+          title: "Custom Colour 1 (start)",
+          type: "color",
+          description: "Only used when 'Custom colours' is selected above",
+          hidden: ({ parent }: any) => parent?.preset !== "gradient-custom",
+        },
+        {
+          name: "color2",
+          title: "Custom Colour 2 (end)",
+          type: "color",
+          description: "Only used when 'Custom colours' is selected above",
+          hidden: ({ parent }: any) => parent?.preset !== "gradient-custom",
+        },
+      ],
+    }),
+    defineField({
+      name: "heroParticles",
+      title: "Particles",
+      type: "object",
+      description: "Decorative floating particles overlaid on the background",
+      fields: [
+        {
+          name: "preset",
+          title: "Particle Style",
+          type: "string",
+          options: {
+            list: [
+              { title: "Dots (default)", value: "dots" },
+              { title: "Stars (twinkling)", value: "stars" },
+              { title: "Sparks (streaks)", value: "sparks" },
+              { title: "Constellation (connected dots)", value: "constellation" },
+              { title: "None", value: "none" },
+            ],
+            layout: "radio",
+          },
+          initialValue: "dots",
+        },
+        {
+          name: "color",
+          title: "Particle Colour",
+          type: "color",
+          description: "Leave blank to use the site accent colour (#c9fb00)",
+        },
+        {
+          name: "density",
+          title: "Density",
+          type: "string",
+          options: {
+            list: [
+              { title: "Low — 22 particles", value: "low" },
+              { title: "Medium — 44 particles (default)", value: "medium" },
+              { title: "High — 72 particles", value: "high" },
+            ],
+            layout: "radio",
+          },
+          initialValue: "medium",
+        },
+        {
+          name: "speed",
+          title: "Speed",
+          type: "string",
+          options: {
+            list: [
+              { title: "Slow", value: "slow" },
+              { title: "Normal (default)", value: "normal" },
+              { title: "Fast", value: "fast" },
+            ],
+            layout: "radio",
+          },
+          initialValue: "normal",
+        },
+        {
+          name: "opacity",
+          title: "Opacity (0 – 1)",
+          type: "number",
+          initialValue: 0.35,
+          description: "0 = invisible, 1 = fully opaque. Default: 0.35",
+          validation: (Rule: any) => Rule.min(0).max(1),
+        },
+      ],
+    }),
+    defineField({
       name: "ctaLabel",
       title: "CTA Button Label",
       type: "string",
