@@ -118,6 +118,7 @@ export function HeroBackground({
     }
 
     function resize() {
+      if (!canvas) return;
       W = canvas.offsetWidth;
       H = canvas.offsetHeight;
       canvas.width = W;
