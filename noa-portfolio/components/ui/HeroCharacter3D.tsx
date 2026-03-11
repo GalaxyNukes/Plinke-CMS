@@ -166,9 +166,12 @@ export function HeroCharacter3D({
 
           scene.add(model);
 
-          // Step 5: Fix materials — cross-platform safe approach
-          // The key issue on Windows Firefox/Chrome is that texture encoding
-          // must be set explicitly when not using SRGBColorSpace (r128 API).
+          // Step 5: Fix materials
+          // GLTFLoader (three-stdlib) already sets correct texture encodings
+          // when it parses the file — do NOT re-set them here or you get
+          // double gamma-correction which washes everything to flat white.
+          // We only fix genuinely broken edge cases: invisible transparency
+          // and missing double-sided flag.
           model.traverse((child: any) => {
             if (child.isMesh) {
               child.castShadow    = true;
@@ -178,28 +181,13 @@ export function HeroCharacter3D({
               if (child.material) {
                 const mats = Array.isArray(child.material) ? child.material : [child.material];
                 mats.forEach((mat: any) => {
-                  // Fix invisible/transparent materials
+                  // Fix accidentally invisible materials (opacity near 0)
                   if (mat.transparent && mat.opacity < 0.1) {
                     mat.transparent = false;
                     mat.opacity = 1;
                   }
-                  // Ensure double-sided so normals don't cause blank faces
+                  // Double-sided prevents blank faces from inverted normals
                   mat.side = THREE.DoubleSide;
-
-                  // Fix texture encoding for r128 (sRGBEncoding = 3001).
-                  // Without this, color textures appear washed-out or black
-                  // on Windows browsers because the GPU doesn't gamma-correct.
-                  const sRGBEncoding = 3001;
-                  const LinearEncoding = 3000;
-                  if (mat.map)              mat.map.encoding              = sRGBEncoding;
-                  if (mat.emissiveMap)      mat.emissiveMap.encoding      = sRGBEncoding;
-                  if (mat.envMap)           mat.envMap.encoding           = sRGBEncoding;
-                  // Normal/roughness/metalness maps must stay linear
-                  if (mat.normalMap)        mat.normalMap.encoding        = LinearEncoding;
-                  if (mat.roughnessMap)     mat.roughnessMap.encoding     = LinearEncoding;
-                  if (mat.metalnessMap)     mat.metalnessMap.encoding     = LinearEncoding;
-                  if (mat.aoMap)            mat.aoMap.encoding            = LinearEncoding;
-
                   mat.needsUpdate = true;
                 });
               }
