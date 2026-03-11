@@ -46,7 +46,7 @@ const nextConfig = {
               // Frames: YouTube + Vimeo for video embeds
               "frame-src https://www.youtube.com https://player.vimeo.com",
               // API/fetch: self + Sanity API + Sanity CDN
-              "connect-src 'self' https://*.sanity.io wss://*.sanity.io https://cdn.sanity.io",
+              "connect-src 'self' blob: https://*.sanity.io wss://*.sanity.io https://cdn.sanity.io",
               // Workers (used by Sanity Studio)
               "worker-src 'self' blob:",
             ].join("; "),
