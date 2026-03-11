@@ -60,10 +60,9 @@ export function HeroCharacter3D({
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setClearColor(0x000000, 0);
-    // outputEncoding is the r128-compatible API (SRGBColorSpace was added in r152)
-    (renderer as any).outputEncoding = 3001; // THREE.sRGBEncoding = 3001
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.5;
+    // No outputEncoding or toneMapping overrides — three-stdlib GLTFLoader
+    // handles colour space internally. Overriding here causes double gamma
+    // correction on all browsers, washing textures to white.
     container.appendChild(renderer.domElement);
 
     // ── Lighting — generous to handle any model ──
