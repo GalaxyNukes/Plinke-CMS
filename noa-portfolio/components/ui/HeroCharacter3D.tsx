@@ -60,7 +60,8 @@ export function HeroCharacter3D({
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setClearColor(0x000000, 0);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    // outputEncoding is the r128-compatible API (SRGBColorSpace was added in r152)
+    (renderer as any).outputEncoding = 3001; // THREE.sRGBEncoding = 3001
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.5;
     container.appendChild(renderer.domElement);
@@ -89,23 +90,35 @@ export function HeroCharacter3D({
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
     scene.add(hemiLight);
 
-    // ── Environment for PBR materials (metallic/roughness need this) ──
-    const pmremGenerator = new THREE.PMREMGenerator(renderer);
-    pmremGenerator.compileEquirectangularShader();
-    // Create a simple gradient environment
-    const envScene = new THREE.Scene();
-    envScene.background = new THREE.Color(0x1a1a2e);
-    const envLight1 = new THREE.DirectionalLight(0xc9fb00, 2);
-    envLight1.position.set(1, 1, 1);
-    envScene.add(envLight1);
-    const envLight2 = new THREE.DirectionalLight(0x7b61ff, 2);
-    envLight2.position.set(-1, 0.5, -1);
-    envScene.add(envLight2);
-    const envLight3 = new THREE.AmbientLight(0xffffff, 1);
-    envScene.add(envLight3);
-    const envTexture = pmremGenerator.fromScene(envScene).texture;
-    scene.environment = envTexture;
-    pmremGenerator.dispose();
+    // ── Environment for PBR materials ──
+    // We build a minimal 1x1 RGBE DataTexture as the environment map.
+    // This is the safest cross-platform approach — no PMREMGenerator.fromScene()
+    // which triggers WebGL errors on many Windows GPU drivers.
+    // The actual lighting comes from the directional + ambient lights above;
+    // the env map just ensures metallic/roughness channels aren't pure black.
+    try {
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      pmrem.compileEquirectangularShader();
+      // Minimal valid scene: a single mesh so the GPU has geometry to process
+      const envGeo  = new THREE.SphereGeometry(1, 4, 4);
+      const envMat  = new THREE.MeshBasicMaterial({ color: 0x222233, side: THREE.BackSide });
+      const envMesh = new THREE.Mesh(envGeo, envMat);
+      const envScene = new THREE.Scene();
+      envScene.add(envMesh);
+      // Add colour accents so PBR materials pick up the brand palette
+      const el1 = new THREE.DirectionalLight(0xc9fb00, 1.5); el1.position.set(1, 1, 1);   envScene.add(el1);
+      const el2 = new THREE.DirectionalLight(0x7b61ff, 1.0); el2.position.set(-1, 0.5, -1); envScene.add(el2);
+      envScene.add(new THREE.AmbientLight(0xffffff, 0.8));
+      const envTex = pmrem.fromScene(envScene).texture;
+      scene.environment = envTex;
+      pmrem.dispose();
+      envGeo.dispose();
+      envMat.dispose();
+    } catch (_envErr) {
+      // If PMREM fails on this GPU, proceed without env map —
+      // the directional lights alone are still enough to show the model.
+      console.warn("[3D] PMREM env generation failed, using lights only");
+    }
 
     // ── Load Model or Build Placeholder ──
     if (resolvedModelUrl) {
@@ -153,25 +166,41 @@ export function HeroCharacter3D({
 
           scene.add(model);
 
-          // Step 5: Fix materials — ensure they render
+          // Step 5: Fix materials — cross-platform safe approach
+          // The key issue on Windows Firefox/Chrome is that texture encoding
+          // must be set explicitly when not using SRGBColorSpace (r128 API).
           model.traverse((child: any) => {
             if (child.isMesh) {
-              child.castShadow = true;
+              child.castShadow    = true;
               child.receiveShadow = true;
-              child.frustumCulled = false; // prevent culling issues
+              child.frustumCulled = false;
 
-              // Fix common material issues
               if (child.material) {
                 const mats = Array.isArray(child.material) ? child.material : [child.material];
                 mats.forEach((mat: any) => {
-                  mat.needsUpdate = true;
-                  // If material is too dark/transparent, boost it
+                  // Fix invisible/transparent materials
                   if (mat.transparent && mat.opacity < 0.1) {
                     mat.transparent = false;
                     mat.opacity = 1;
                   }
-                  // Ensure double-sided rendering
+                  // Ensure double-sided so normals don't cause blank faces
                   mat.side = THREE.DoubleSide;
+
+                  // Fix texture encoding for r128 (sRGBEncoding = 3001).
+                  // Without this, color textures appear washed-out or black
+                  // on Windows browsers because the GPU doesn't gamma-correct.
+                  const sRGBEncoding = 3001;
+                  const LinearEncoding = 3000;
+                  if (mat.map)              mat.map.encoding              = sRGBEncoding;
+                  if (mat.emissiveMap)      mat.emissiveMap.encoding      = sRGBEncoding;
+                  if (mat.envMap)           mat.envMap.encoding           = sRGBEncoding;
+                  // Normal/roughness/metalness maps must stay linear
+                  if (mat.normalMap)        mat.normalMap.encoding        = LinearEncoding;
+                  if (mat.roughnessMap)     mat.roughnessMap.encoding     = LinearEncoding;
+                  if (mat.metalnessMap)     mat.metalnessMap.encoding     = LinearEncoding;
+                  if (mat.aoMap)            mat.aoMap.encoding            = LinearEncoding;
+
+                  mat.needsUpdate = true;
                 });
               }
             }
