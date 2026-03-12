@@ -240,7 +240,10 @@ export function HeroCharacter3D({
           });
           console.log("[3D] Meshes:", meshNames);
 
-          // Step 7: Play idle animation
+          // Step 7: Play idle animation — but strip any tracks that drive the
+          // head bone. We take full control of the head bone for cursor tracking;
+          // if the mixer also writes to it every frame the two fight each other,
+          // causing a twitch/snap on every animation loop reset.
           if (gltf.animations.length > 0) {
             mixer = new THREE.AnimationMixer(model);
             let idleClip = gltf.animations[0];
@@ -250,7 +253,20 @@ export function HeroCharacter3D({
                 break;
               }
             }
-            const action = mixer.clipAction(idleClip);
+            // Clone the clip so we don't mutate the original asset, then
+            // remove any track whose property path targets the head bone.
+            const clonedClip = idleClip.clone();
+            clonedClip.tracks = clonedClip.tracks.filter((track: any) => {
+              // Track names look like "BoneName.quaternion" or "mixamorig:Head.quaternion"
+              const bonePart = track.name.split(".")[0].toLowerCase();
+              const headName = headBoneName.toLowerCase();
+              const isHead = bonePart === headName ||
+                             bonePart.endsWith(headName) ||
+                             bonePart.includes("head");
+              if (isHead) console.log("[3D] Stripped head track from mixer:", track.name);
+              return !isHead;
+            });
+            const action = mixer.clipAction(clonedClip);
             action.play();
             console.log("[3D] Playing animation:", idleClip.name, "(" + gltf.animations.length + " total)");
           } else {
@@ -317,33 +333,36 @@ export function HeroCharacter3D({
           const cx = Math.max(-1, Math.min(1, mouseRef.current.x));
           const cy = Math.max(-1, Math.min(1, mouseRef.current.y));
 
-          // ── Build + smoothly chase target in WORLD space only ──
-          // cursorOffset lives in world space and slews toward the mouse target
-          // each frame. It NEVER depends on the animated bone pose or the parent
-          // chain quaternion — so animation loop resets can't cause a twitch.
+          // ── Build target in world space ──
+          // The mixer no longer has a head bone track (stripped at load time),
+          // so we own this bone completely — no animPose needed.
           const maxRotY = 0.65 * headTrackIntensity;
           const maxRotX = 0.50 * headTrackIntensity;
           lookAtEuler.set(-cy * maxRotX, cx * maxRotY, 0, "YXZ");
           worldOffset.setFromEuler(lookAtEuler);
-          cursorOffset.slerp(worldOffset, 0.12); // world-space chase
 
-          // ── Convert to bone-local and apply on top of animated pose ──
-          // Read parent world quat AFTER mixer.update() so it's current.
-          // Then: localOffset = P^-1 * cursorOffset * P
+          // Smooth world-space chase — completely independent of anim state
+          cursorOffset.slerp(worldOffset, 0.12);
+
+          // ── Convert world-space offset → bone-local, write directly ──
+          // localRot = P^-1 * cursorOffset * P  (P = parent world quaternion)
           scene.updateMatrixWorld(false);
           if (headBone.parent) {
             headBone.parent.getWorldQuaternion(parentWorldQuat);
           } else {
             parentWorldQuat.identity();
           }
+          // Store the bind-pose quaternion the first time (before we ever write)
+          if (!(headBone as any).__bindQuat) {
+            (headBone as any).__bindQuat = headBone.quaternion.clone();
+          }
+          const bindQuat: THREE.Quaternion = (headBone as any).__bindQuat;
           localTarget
             .copy(parentWorldQuat).invert()
             .multiply(cursorOffset)
             .multiply(parentWorldQuat);
-
-          // Snapshot animated pose AFTER world matrices are settled, then apply offset.
-          const animPose = headBone.quaternion.clone();
-          headBone.quaternion.copy(animPose).multiply(localTarget);
+          // Apply offset on top of bind pose (not animated pose — mixer no longer writes this)
+          headBone.quaternion.copy(bindQuat).multiply(localTarget);
 
         } else {
           // Placeholder robot — no parent chain complexity, apply directly
