@@ -123,6 +123,13 @@ export default defineType({
           description: "Scale multiplier for the model. 1.0 = auto-fit (default). 1.5 = 50% bigger. 0.5 = half size.",
         },
         {
+          name: "modelRotationY",
+          title: "Model Rotation (Y axis)",
+          type: "number",
+          initialValue: 0,
+          description: "Rotate the model left/right in degrees. 0 = facing forward, 180 = facing away, -90 = facing right, 90 = facing left.",
+        },
+        {
           name: "headTrackIntensity",
           title: "Head Track Intensity",
           type: "number",

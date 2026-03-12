@@ -11,6 +11,7 @@ interface HeroCharacter3DProps {
   cameraHeight?: number;
   modelScale?: number;
   headTrackIntensity?: number;
+  modelRotationY?: number;
   /** When true the canvas is full-width; camera pans left so model stays on the right half */
   fullWidthMode?: boolean;
 }
@@ -21,6 +22,7 @@ export function HeroCharacter3D({
   cameraDistance = 4.5,
   cameraHeight = 1.0,
   modelScale = 1.0,
+  modelRotationY = 0,
   headTrackIntensity = 0.6,
   fullWidthMode = false,
 }: HeroCharacter3DProps) {
@@ -155,6 +157,7 @@ export function HeroCharacter3D({
           model.position.x = -center.x;
           model.position.z = -center.z;
           model.position.y = -box.min.y; // feet on ground (y=0)
+          model.rotation.y = (modelRotationY * Math.PI) / 180; // degrees → radians
 
           console.log("[3D] Final size:", size.x.toFixed(2), size.y.toFixed(2), size.z.toFixed(2));
 
@@ -408,7 +411,7 @@ export function HeroCharacter3D({
         container.removeChild(renderer.domElement);
       }
     };
-  }, [modelUrl, headBoneName, cameraDistance, cameraHeight, modelScale, headTrackIntensity, fullWidthMode]);
+  }, [modelUrl, headBoneName, cameraDistance, cameraHeight, modelScale, modelRotationY, headTrackIntensity, fullWidthMode]);
 
   return (
     <div ref={containerRef} className="w-full h-full relative" style={{ minHeight: "400px" }}>
