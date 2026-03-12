@@ -346,9 +346,9 @@ export function HeroCharacter3D({
           const maxYaw   = 0.65 * headTrackIntensity;
           const maxPitch = 0.50 * headTrackIntensity;
           lookAtEuler.set(
-            -cx * maxYaw,   // local X → left / right
+            cx * maxYaw,   // local X → left / right
             0,
-            -cy * maxPitch, // local Z → up / down
+            cy * maxPitch, // local Z → up / down
             "XYZ"
           );
           worldOffset.setFromEuler(lookAtEuler);
