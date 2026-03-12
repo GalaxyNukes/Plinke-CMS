@@ -313,7 +313,13 @@ export function HeroCharacter3D({
 
       if (headBone) {
         if (mixer) {
-          // ── Snapshot animated pose (mixer just wrote this) ──
+          // Force-recalculate ALL world matrices after mixer.update() writes
+          // local transforms. Must use force=true so stale parent matrices
+          // from the previous frame don't corrupt the bone-local conversion,
+          // which caused a periodic twitch every time the parent chain drifted.
+          scene.updateMatrixWorld(true);
+
+          // Snapshot animated pose AFTER world matrices are current.
           const animPose = headBone.quaternion.clone();
 
           // ── Clamp cursor to [-1, 1] ──
@@ -321,50 +327,27 @@ export function HeroCharacter3D({
           const cy = Math.max(-1, Math.min(1, mouseRef.current.y));
 
           // ── Build target rotation in WORLD space ──
-          // This is the critical fix: euler rotations built in world space
-          // mean "rotate around world-Y (yaw)" and "rotate around world-X (pitch)",
-          // which is what "turn left/right" and "look up/down" actually mean
-          // regardless of how the bone's local axes are oriented.
-          //
-          // The reason the previous approach produced a 45° tilt is that
-          // applying euler rotations as LOCAL bone rotations assumes the bone's
-          // local X/Y axes are aligned with world axes — but with 5 neck bones
-          // in the parent chain, the local axes are heavily rotated. So
-          // "rotate around local Y" was not "turn left" at all.
-          const maxRotY = 0.65 * headTrackIntensity; // yaw (left/right)
-          const maxRotX = 0.50 * headTrackIntensity; // pitch (up/down)
+          const maxRotY = 0.65 * headTrackIntensity;
+          const maxRotX = 0.50 * headTrackIntensity;
           lookAtEuler.set(
-            -cy * maxRotX,  // cy>0 = cursor above centre = look up = -X world rotation
-             cx * maxRotY,  // cx>0 = cursor right of centre = look right = +Y world rotation
+            -cy * maxRotX,
+             cx * maxRotY,
             0,
-            "YXZ"           // yaw first, then pitch — natural head motion order
+            "YXZ"
           );
           worldOffset.setFromEuler(lookAtEuler);
 
           // ── Convert world-space rotation to bone-local space ──
-          // The parent chain (neck_03 → neck_02 → ... → spine) has an accumulated
-          // world quaternion P. The bone's world quaternion = P * localQuat.
-          // We want to PRE-apply worldOffset in world space:
-          //   desired worldQuat = worldOffset * P * animPose
-          // Solving for the new local quaternion:
-          //   localQuat = P^-1 * worldOffset * P * animPose
-          // The local OFFSET (on top of animPose) is therefore:
-          //   localOffset = P^-1 * worldOffset * P
-          //
-          // Force world matrices current after mixer.update() wrote local transforms.
-          // (Three.js only recalculates world matrices during renderer.render(),
-          // so we must do it manually here before calling getWorldQuaternion.)
-          scene.updateMatrixWorld(false);
+          // localOffset = P^-1 * worldOffset * P  (P = parent world quaternion)
           if (headBone.parent) {
             headBone.parent.getWorldQuaternion(parentWorldQuat);
           } else {
             parentWorldQuat.identity();
           }
-          // localOffset = P^-1 * worldOffset * P
           localTarget
-            .copy(parentWorldQuat).invert()  // P^-1
-            .multiply(worldOffset)            // P^-1 * worldOffset
-            .multiply(parentWorldQuat);       // P^-1 * worldOffset * P
+            .copy(parentWorldQuat).invert()
+            .multiply(worldOffset)
+            .multiply(parentWorldQuat);
 
           // ── Smooth chase — persists across frames ──
           cursorOffset.slerp(localTarget, 0.12);
