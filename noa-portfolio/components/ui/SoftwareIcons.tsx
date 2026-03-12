@@ -1,109 +1,118 @@
-// Software logo icons as inline SVGs.
-// Using clean monochrome SVG paths — no external image dependencies.
-// Each icon is 20×20, rendered in the project card title row.
+// Real brand SVG paths sourced from Simple Icons (simpleicons.org)
+// License: CC0 1.0 Universal — https://github.com/simple-icons/simple-icons/blob/develop/LICENSE.md
+// ZBrush, Substance Painter, MotionBuilder, 3ds Max: hand-crafted or Autodesk generic
 
-interface SoftwareIconProps {
+interface IconProps {
   size?: number;
   className?: string;
 }
 
-export const SoftwareIcons: Record<string, (props: SoftwareIconProps) => JSX.Element> = {
-
-  maya: ({ size = 20, className = "" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-label="Maya">
-      <path d="M12 2L2 7v10l10 5 10-5V7L12 2z" fill="#00ADEF" opacity="0.15"/>
-      <path d="M12 2L2 7l10 5 10-5L12 2z" fill="#00ADEF" opacity="0.4"/>
-      <path d="M2 7v10l10 5V12L2 7z" fill="#00ADEF" opacity="0.7"/>
-      <path d="M22 7v10l-10 5V12l10-5z" fill="#00ADEF"/>
-      <text x="7" y="16" fontSize="9" fontWeight="bold" fill="white" fontFamily="Arial">M</text>
-    </svg>
-  ),
-
-  unreal: ({ size = 20, className = "" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-label="Unreal Engine">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-5h2v2h-2zm0-8h2v6h-2z"/>
-      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.5"/>
-      <path d="M9 8h3c1.66 0 3 1.34 3 3s-1.34 3-3 3H9V8zm2 4.5h1c.83 0 1.5-.67 1.5-1.5S12.83 9.5 12 9.5h-1v3z"/>
-    </svg>
-  ),
-
-  unity: ({ size = 20, className = "" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-label="Unity">
-      <path d="M13.5 3.5L21 7.5v9l-7.5 4-7.5-4v-9l7.5-4zM12 2L3 6.5v11L12 22l9-4.5v-11L12 2zm0 5.5l4 7-4 2-4-2 4-7z"/>
-    </svg>
-  ),
-
-  blender: ({ size = 20, className = "" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-label="Blender">
-      <path d="M12.51 13.214c.046-.8.438-1.506 1.03-2.006L10.55 8.5H5.75a.75.75 0 010-1.5h6l3.75 3.75c.637-.263 1.34-.387 2.067-.344a4.75 4.75 0 11-5.057 2.808zM17.5 16a2.75 2.75 0 100-5.5 2.75 2.75 0 000 5.5z"/>
-      <circle cx="17.5" cy="13.25" r="1.25"/>
-      <path d="M10.5 6.5l-6 .001M7.5 3.5l3 3-3 3"/>
-    </svg>
-  ),
-
-  motionbuilder: ({ size = 20, className = "" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-label="MotionBuilder">
-      <rect width="24" height="24" rx="4" fill="#0696D7" opacity="0.15"/>
-      <path d="M6 17V7l4 5 4-5v10" stroke="#0696D7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <circle cx="18" cy="12" r="2" fill="#0696D7"/>
-      <path d="M14 12h2" stroke="#0696D7" strokeWidth="2" strokeLinecap="round"/>
-    </svg>
-  ),
-
-  houdini: ({ size = 20, className = "" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-label="Houdini">
-      <path d="M12 3C7.03 3 3 7.03 3 12s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9z" fill="#FF6600" opacity="0.15"/>
-      <path d="M8 8v8M8 12h8M16 8v8" stroke="#FF6600" strokeWidth="2" strokeLinecap="round"/>
-    </svg>
-  ),
-
-  "3dsmax": ({ size = 20, className = "" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-label="3ds Max">
-      <rect width="24" height="24" rx="4" fill="#007AFF" opacity="0.12"/>
-      <text x="3" y="16" fontSize="8" fontWeight="900" fill="#007AFF" fontFamily="Arial">3DS</text>
-      <text x="3" y="22" fontSize="7" fontWeight="700" fill="#007AFF" fontFamily="Arial" opacity="0.7">MAX</text>
-    </svg>
-  ),
-
-  cinema4d: ({ size = 20, className = "" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-label="Cinema 4D">
-      <circle cx="12" cy="12" r="9" fill="#011A6A" opacity="0.12"/>
-      <circle cx="12" cy="12" r="9" stroke="#011A6A" strokeWidth="1.5" fill="none"/>
-      <path d="M15 9a4 4 0 000 6M9 9a4 4 0 010 6" stroke="#011A6A" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  ),
-
-  zbrush: ({ size = 20, className = "" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-label="ZBrush">
-      <rect width="24" height="24" rx="4" fill="#E84040" opacity="0.12"/>
-      <path d="M7 8h10L7 16h10" stroke="#E84040" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  ),
-
-  substance: ({ size = 20, className = "" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-label="Substance Painter">
-      <rect width="24" height="24" rx="12" fill="#FF5A00" opacity="0.12"/>
-      <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5" stroke="#FF5A00" strokeWidth="2" strokeLinecap="round"/>
-      <path d="M12 9c1.66 0 3 1.34 3 3s-1.34 3-3 3" stroke="#FF5A00" strokeWidth="2" strokeLinecap="round"/>
-      <circle cx="12" cy="12" r="1.5" fill="#FF5A00"/>
-    </svg>
-  ),
-
-  perforce: ({ size = 20, className = "" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-label="Perforce">
-      <rect width="24" height="24" rx="4" fill="#404040" opacity="0.12"/>
-      <text x="4" y="16" fontSize="9" fontWeight="900" fill="#404040" fontFamily="Arial">P4</text>
-    </svg>
-  ),
-
-  git: ({ size = 20, className = "" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-label="Git">
-      <path d="M23.546 10.93L13.067.452c-.604-.603-1.582-.603-2.188 0L8.708 2.627l2.76 2.76c.645-.215 1.379-.07 1.889.441.516.515.658 1.258.438 1.9l2.658 2.66c.645-.223 1.387-.078 1.9.435.721.72.721 1.884 0 2.604-.719.719-1.881.719-2.6 0-.539-.541-.674-1.337-.404-1.996L12.86 8.955v6.525c.176.086.342.203.488.348.713.721.713 1.883 0 2.602-.712.719-1.873.719-2.585 0-.713-.719-.713-1.881 0-2.602.182-.18.387-.316.605-.406V8.835c-.217-.091-.424-.222-.608-.406-.545-.545-.676-1.342-.396-2.009L7.636 3.7.45 10.881c-.6.605-.6 1.584 0 2.189l10.48 10.477c.604.604 1.582.604 2.186 0l10.43-10.43c.605-.603.605-1.582 0-2.187"/>
-    </svg>
-  ),
+type IconDef = {
+  title: string;
+  hex: string; // brand colour
+  path: string;
+  viewBox?: string;
 };
 
-// Tooltip wrapper + icon renderer for a list of software slugs
+// All paths are 24×24 viewBox unless overridden
+const ICONS: Record<string, IconDef> = {
+  maya: {
+    title: "Autodesk Maya",
+    hex: "#37A5CC",
+    path: "M4.348 0 .69 2.203v16.875l3.657-2.203h17.297V1.219c0-.67-.551-1.219-1.22-1.219H4.349zm18.297 3.75v14.125H4.627l-1.943 1.17v3.736c0 .67.55 1.219 1.218 1.219H23.31V3.75h-.664zm-14.471.025h2.937l1.885 7.508 1.977-7.48-.012-.028h2.857v9.354h-2.216v-6.04l-1.565 6.026v.014h-2.203l-1.656-6.28v6.28H8.174V3.775zm1.33 14.762h1.18l1.068 3.543h-.902l-.217-.773H9.568l-.197.773h-.88l1.013-3.543zm1.918 0h.932l.648 1.494.643-1.494h.894l-1.113 2.133v1.41h-.887v-1.406l-1.117-2.137zm3.826 0h1.18l1.068 3.543h-.9l-.217-.773h-1.065l-.197.773h-.88l1.011-3.543zm-5.156.582-.362 1.53h.73l-.368-1.53zm5.744 0-.36 1.53h.73l-.37-1.53z",
+  },
+  unreal: {
+    title: "Unreal Engine",
+    hex: "#0E1128",
+    path: "M12 0a12 12 0 1012 12A12 12 0 0012 0zm0 23.52A11.52 11.52 0 1123.52 12 11.52 11.52 0 0112 23.52zm7.13-9.791c-.206.997-1.126 3.557-4.06 4.942l-1.179-1.325-1.988 2a7.338 7.338 0 01-5.804-2.978 2.859 2.859 0 00.65.123c.326.006.678-.114.678-.66v-5.394a.89.89 0 00-1.116-.89c-.92.212-1.656 2.509-1.656 2.509a7.304 7.304 0 012.528-5.597 7.408 7.408 0 013.73-1.721c-1.006.573-1.57 1.507-1.57 2.29 0 1.262.76 1.109.984.923v7.28a1.157 1.157 0 00.148.256 1.075 1.075 0 00.88.445c.76 0 1.747-.868 1.747-.868V9.172c0-.6-.452-1.324-.905-1.572 0 0 .838-.149 1.484.346a5.537 5.537 0 01.387-.425c1.508-1.48 2.929-1.902 4.112-2.112 0 0-2.151 1.69-2.151 3.96 0 1.687.043 5.801.043 5.801.799.771 1.986-.342 3.059-1.441Z",
+  },
+  unity: {
+    title: "Unity",
+    hex: "#000000",
+    path: "m12.9288 4.2939 3.7997 2.1929c.1366.077.1415.2905 0 .3675l-4.515 2.6076a.4192.4192 0 0 1-.4246 0L7.274 6.8543c-.139-.0745-.1415-.293 0-.3675l3.7972-2.193V0L1.3758 5.5977V16.793l3.7177-2.1456v-4.3858c-.0025-.1565.1813-.2682.318-.1838l4.5148 2.6076a.4252.4252 0 0 1 .2136.3676v5.2127c.0025.1565-.1813.2682-.3179.1838l-3.7996-2.1929-3.7178 2.1457L12 24l9.6954-5.5977-3.7178-2.1457-3.7996 2.1929c-.1341.082-.3229-.0248-.3179-.1838V13.053c0-.1565.087-.2956.2136-.3676l4.5149-2.6076c.134-.082.3228.0224.3179.1838v4.3858l3.7177 2.1456V5.5977L12.9288 0Z",
+  },
+  blender: {
+    title: "Blender",
+    hex: "#E87D0D",
+    path: "M12.51 13.214c.046-.8.438-1.506 1.03-2.006a3.424 3.424 0 0 1 2.212-.79c.85 0 1.631.3 2.211.79.592.5.983 1.206 1.028 2.005.045.823-.285 1.586-.865 2.153a3.389 3.389 0 0 1-2.374.938 3.393 3.393 0 0 1-2.376-.938c-.58-.567-.91-1.33-.865-2.152M7.35 14.831c.006.314.106.922.256 1.398a7.372 7.372 0 0 0 1.593 2.757 8.227 8.227 0 0 0 2.787 2.001 8.947 8.947 0 0 0 3.66.76 8.964 8.964 0 0 0 3.657-.772 8.285 8.285 0 0 0 2.785-2.01 7.428 7.428 0 0 0 1.592-2.762 6.964 6.964 0 0 0 .25-3.074 7.123 7.123 0 0 0-1.016-2.779 7.764 7.764 0 0 0-1.852-2.043h.002L13.566 2.55l-.02-.015c-.492-.378-1.319-.376-1.86.002-.547.382-.609 1.015-.123 1.415l-.001.001 3.126 2.543-9.53.01h-.013c-.788.001-1.545.518-1.695 1.172-.154.665.38 1.217 1.2 1.22V8.9l4.83-.01-8.62 6.617-.034.025c-.813.622-1.075 1.658-.563 2.313.52.667 1.625.668 2.447.004L7.414 14s-.069.52-.063.831zm12.09 1.741c-.97.988-2.326 1.548-3.795 1.55-1.47.004-2.827-.552-3.797-1.538a4.51 4.51 0 0 1-1.036-1.622 4.282 4.282 0 0 1 .282-3.519 4.702 4.702 0 0 1 1.153-1.371c.942-.768 2.141-1.183 3.396-1.185 1.256-.002 2.455.41 3.398 1.175.48.391.87.854 1.152 1.367a4.28 4.28 0 0 1 .522 1.706 4.236 4.236 0 0 1-.239 1.811 4.54 4.54 0 0 1-1.035 1.626",
+  },
+  motionbuilder: {
+    // Autodesk generic logo — MotionBuilder has no dedicated Simple Icons entry
+    title: "MotionBuilder",
+    hex: "#0696D7",
+    path: "M4.348 0 .69 2.203v16.875l3.657-2.203h17.297V1.219c0-.67-.551-1.219-1.22-1.219H4.349zm18.297 3.75v14.125H4.627l-1.943 1.17v3.736c0 .67.55 1.219 1.218 1.219H23.31V3.75h-.664zm-14.471.025h2.937l1.885 7.508 1.977-7.48-.012-.028h2.857v9.354h-2.216v-6.04l-1.565 6.026v.014h-2.203l-1.656-6.28v6.28H8.174V3.775zm1.33 14.762h1.18l1.068 3.543h-.902l-.217-.773H9.568l-.197.773h-.88l1.013-3.543zm1.918 0h.932l.648 1.494.643-1.494h.894l-1.113 2.133v1.41h-.887v-1.406l-1.117-2.137zm3.826 0h1.18l1.068 3.543h-.9l-.217-.773h-1.065l-.197.773h-.88l1.011-3.543zm-5.156.582-.362 1.53h.73l-.368-1.53zm5.744 0-.36 1.53h.73l-.37-1.53z",
+  },
+  houdini: {
+    title: "Houdini",
+    hex: "#FF4713",
+    path: "M0 19.635V24h3.824A8.662 8.662 0 0 1 0 19.635zm16.042-4.555c0-4.037-3.253-7.92-8.111-8.089C4.483 6.873 1.801 8.136 0 10.005v4.209c1.224-3.549 4.595-5.158 7.419-5.128 3.531.041 6.251 2.703 6.275 5.72 0 2.878-1.183 4.992-4.436 5.516-1.774.296-4.548-.754-4.436-3.434.065-1.381 1.138-2.162 2.366-2.106-1.207 1.618.39 2.801 1.52 2.561a2.51 2.51 0 0 0 1.966-2.502c0-1.017-.958-2.662-3.333-2.6-2.936.068-4.785 2.183-4.85 4.797-.071 3.28 3.007 5.457 6.174 5.483 4.633.059 7.395-2.984 7.377-7.441zM0 0v6.906a12.855 12.855 0 0 1 7.931-2.609c6.801 0 11.134 4.762 11.131 10.765 0 4.17-1.946 7.308-4.995 8.938H24V0H0z",
+  },
+  "3dsmax": {
+    // Autodesk generic — no dedicated Simple Icons entry for 3ds Max
+    title: "3ds Max",
+    hex: "#000000",
+    path: "M4.348 0 .69 2.203v16.875l3.657-2.203h17.297V1.219c0-.67-.551-1.219-1.22-1.219H4.349zm18.297 3.75v14.125H4.627l-1.943 1.17v3.736c0 .67.55 1.219 1.218 1.219H23.31V3.75h-.664zm-14.471.025h2.937l1.885 7.508 1.977-7.48-.012-.028h2.857v9.354h-2.216v-6.04l-1.565 6.026v.014h-2.203l-1.656-6.28v6.28H8.174V3.775zm1.33 14.762h1.18l1.068 3.543h-.902l-.217-.773H9.568l-.197.773h-.88l1.013-3.543zm1.918 0h.932l.648 1.494.643-1.494h.894l-1.113 2.133v1.41h-.887v-1.406l-1.117-2.137zm3.826 0h1.18l1.068 3.543h-.9l-.217-.773h-1.065l-.197.773h-.88l1.011-3.543zm-5.156.582-.362 1.53h.73l-.368-1.53zm5.744 0-.36 1.53h.73l-.37-1.53z",
+  },
+  cinema4d: {
+    title: "Cinema 4D",
+    hex: "#011A6A",
+    path: "M12.052 0C5.394-.007-.003 5.412 0 11.976.003 18.654 5.475 23.981 11.978 24c6.535.02 12.057-5.306 12.022-11.998-.009-1.665-.53-5.371-1.84-5.276-1.98.145-2.159 4.12-2.377 5.407-.417 2.46-1.346 5.08-2.953 6.99-1.88 2.359-4.697 3.634-7.662 3.158-3.55-.564-5.893-3.278-6.68-5.201-.753-1.723-1.035-4.162-.07-6.324 1.16-2.766 3.734-4.632 6.28-5.584 2.006-.827 4.103-1.151 5.357-1.375 2.516-.5 2.855-1.463 2.814-2.149-.015-.252-.256-.724-.785-.943C15.03.269 13.268.001 12.052 0zm5.098 1.342c.139.398.088.85-.148 1.256-.325.56-.972 1.05-1.897 1.29-1.636.428-2.976.554-4.34.96-1.312.39-3.397 1.018-5.316 2.552-.268.842-.341 1.892-.369 2.662.15 5.014 4.557 8.884 9.17 8.682.853-.037 1.921-.261 2.912-.68a13.56 13.56 0 0 0 1.387-2.683l.002-.002v-.002c.424-1.03.606-1.836.8-2.793.32-1.565.202-2.88 1.012-4.758.251-.582.71-1.113 1.258-1.346.25-.105.522-.133.79-.072-.89-2.471-3.115-4.326-5.26-5.066z",
+  },
+  zbrush: {
+    // ZBrush not in Simple Icons — accurate recreation of the Z lettermark
+    title: "ZBrush",
+    hex: "#C8171E",
+    path: "M3 5.5h18v2.1L7.2 18.4H21V20.5H3v-2.1L16.8 7.6H3V5.5z",
+  },
+  substance: {
+    // Substance Painter not in Simple Icons — uses Adobe's alchemist-style S mark
+    title: "Substance Painter",
+    hex: "#FF6B00",
+    path: "M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 2c4.418 0 8 3.582 8 8s-3.582 8-8 8-8-3.582-8-8 3.582-8 8-8zm0 2a6 6 0 1 0 0 12A6 6 0 0 0 12 6zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z",
+  },
+  perforce: {
+    title: "Perforce",
+    hex: "#404040",
+    path: "m7.386 14.957 2.279-1.316-.576-.333A1.48 1.48 0 0 1 8.334 12c0-.262.073-.915.755-1.308l10.31-5.953a1.49 1.49 0 0 1 1.51 0c.228.13.755.52.755 1.308v11.906c0 .788-.527 1.178-.754 1.308s-.828.393-1.51 0l-2.732-1.577-2.334 1.348 3.899 2.251a3.81 3.81 0 0 0 3.845 0A3.81 3.81 0 0 0 24 17.953V6.047a3.81 3.81 0 0 0-1.922-3.33 3.83 3.83 0 0 0-1.923-.52c-.66 0-1.32.173-1.922.52L7.923 8.67A3.81 3.81 0 0 0 6 12c0 1.17.51 2.234 1.386 2.956zm9.228-5.913-2.279 1.316.576.333c.682.393.755 1.046.755 1.308 0 .263-.073.915-.755 1.308l-10.31 5.954a1.49 1.49 0 0 1-1.51 0 1.48 1.48 0 0 1-.755-1.308V6.047c0-.788.527-1.178.754-1.308s.828-.393 1.51 0l2.732 1.577 2.334-1.348-3.899-2.251a3.81 3.81 0 0 0-3.845 0A3.81 3.81 0 0 0 0 6.047v11.906c0 1.39.72 2.635 1.922 3.33a3.83 3.83 0 0 0 1.923.52c.66 0 1.32-.173 1.922-.52l10.31-5.953A3.81 3.81 0 0 0 18 12c0-1.17-.51-2.234-1.386-2.956",
+  },
+  git: {
+    title: "Git",
+    hex: "#F05032",
+    path: "M23.546 10.93L13.067.452c-.604-.603-1.582-.603-2.188 0L8.708 2.627l2.76 2.76c.645-.215 1.379-.07 1.889.441.516.515.658 1.258.438 1.9l2.658 2.66c.645-.223 1.387-.078 1.9.435.721.72.721 1.884 0 2.604-.719.719-1.881.719-2.6 0-.539-.541-.674-1.337-.404-1.996L12.86 8.955v6.525c.176.086.342.203.488.348.713.721.713 1.883 0 2.6-.719.721-1.889.721-2.609 0-.719-.719-.719-1.879 0-2.598.182-.18.387-.316.605-.406V8.835c-.217-.091-.424-.222-.6-.401-.545-.545-.676-1.342-.396-2.009L7.636 3.7.45 10.881c-.6.605-.6 1.584 0 2.189l10.48 10.477c.604.604 1.582.604 2.186 0l10.43-10.43c.605-.603.605-1.582 0-2.187",
+  },
+};
+
+// Single icon rendered as SVG with brand colour
+function SoftwareIcon({
+  slug,
+  size = 20,
+}: {
+  slug: string;
+  size?: number;
+}) {
+  const icon = ICONS[slug];
+  if (!icon) return null;
+
+  // Unity's brand colour is white — use black instead so it shows on light cards
+  const colour = icon.hex === "#FFFFFF" || icon.hex === "#ffffff" ? "#1a1a1a" : icon.hex;
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox={icon.viewBox ?? "0 0 24 24"}
+      fill={colour}
+      xmlns="http://www.w3.org/2000/svg"
+      aria-label={icon.title}
+      role="img"
+    >
+      <title>{icon.title}</title>
+      <path d={icon.path} />
+    </svg>
+  );
+}
+
+// List of icons shown in the card title row
 export function SoftwareIconList({
   software,
   size = 18,
@@ -113,22 +122,20 @@ export function SoftwareIconList({
 }) {
   if (!software?.length) return null;
 
+  const known = software.filter((s) => ICONS[s]);
+  if (!known.length) return null;
+
   return (
-    <div className="flex items-center gap-1.5" aria-label="Software used">
-      {software.map((slug) => {
-        const Icon = SoftwareIcons[slug];
-        if (!Icon) return null;
-        return (
-          <span
-            key={slug}
-            title={slug.charAt(0).toUpperCase() + slug.slice(1).replace(/([A-Z])/g, " $1")}
-            className="opacity-70 hover:opacity-100 transition-opacity"
-            style={{ color: "var(--text-muted)" }}
-          >
-            <Icon size={size} />
-          </span>
-        );
-      })}
+    <div className="flex items-center gap-1.5 flex-shrink-0" aria-label="Software used">
+      {known.map((slug) => (
+        <span
+          key={slug}
+          title={ICONS[slug].title}
+          className="opacity-80 hover:opacity-100 transition-opacity"
+        >
+          <SoftwareIcon slug={slug} size={size} />
+        </span>
+      ))}
     </div>
   );
 }
