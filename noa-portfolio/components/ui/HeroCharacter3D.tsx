@@ -358,6 +358,24 @@ export function HeroCharacter3D({
             const bwq = new THREE.Quaternion();
             headBone.getWorldQuaternion(bwq);
             (headBone as any).__bindWorldQuat = bwq;
+            // DEBUG — log everything we need to understand the rig's axes
+            const pq = new THREE.Quaternion();
+            if (headBone.parent) headBone.parent.getWorldQuaternion(pq);
+            console.log("[3D] HEAD bind local quat:", JSON.stringify(headBone.quaternion));
+            console.log("[3D] HEAD bind world quat:", JSON.stringify(bwq));
+            console.log("[3D] PARENT world quat:", JSON.stringify(pq));
+            // What does "world +Y rotation" look like in bone local space?
+            const testEuler = new THREE.Euler(0, 0.3, 0, "YXZ");
+            const testWorld = new THREE.Quaternion().setFromEuler(testEuler);
+            const testLocal = pq.clone().invert().multiply(testWorld).multiply(pq);
+            const testLocalE = new THREE.Euler().setFromQuaternion(testLocal, "YXZ");
+            console.log("[3D] World +Y 0.3rad → local euler:", testLocalE.x.toFixed(3), testLocalE.y.toFixed(3), testLocalE.z.toFixed(3));
+            // And world +X rotation (pitch up):
+            const testEuler2 = new THREE.Euler(0.3, 0, 0, "YXZ");
+            const testWorld2 = new THREE.Quaternion().setFromEuler(testEuler2);
+            const testLocal2 = pq.clone().invert().multiply(testWorld2).multiply(pq);
+            const testLocalE2 = new THREE.Euler().setFromQuaternion(testLocal2, "YXZ");
+            console.log("[3D] World +X 0.3rad → local euler:", testLocalE2.x.toFixed(3), testLocalE2.y.toFixed(3), testLocalE2.z.toFixed(3));
           }
           const bindWorldQuat: THREE.Quaternion = (headBone as any).__bindWorldQuat;
 
