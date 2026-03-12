@@ -68,7 +68,8 @@ export const pageQuery = groq`
           date,
           teamSize,
           playLink,
-          videoLink
+          videoLink,
+          software
         }
       },
       _type == "testimonials" => {
