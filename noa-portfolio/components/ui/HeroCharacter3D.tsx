@@ -329,69 +329,31 @@ export function HeroCharacter3D({
 
       if (headBone) {
         if (mixer) {
-          // ── Clamp cursor to [-1, 1] ──
+          // Store bind-pose local quat once, before we ever write to the bone.
+          if (!(headBone as any).__bindLocalQuat) {
+            (headBone as any).__bindLocalQuat = headBone.quaternion.clone();
+          }
+          const bindLocalQuat: THREE.Quaternion = (headBone as any).__bindLocalQuat;
+
           const cx = Math.max(-1, Math.min(1, mouseRef.current.x));
           const cy = Math.max(-1, Math.min(1, mouseRef.current.y));
 
-          // ── Build target in world space ──
-          // The mixer no longer has a head bone track (stripped at load time),
-          // so we own this bone completely — no animPose needed.
-          const maxRotY = 0.65 * headTrackIntensity;
-          const maxRotX = 0.50 * headTrackIntensity;
-          lookAtEuler.set(-cy * maxRotX, cx * maxRotY, 0, "YXZ");
+          // Debug output showed the parent world quat is ~110° rotated (Maya Z-up rig).
+          // Axis mapping for this rig:
+          //   World +Y (yaw)   → local: X=0.264, Y=0.144  → drive local X for left/right
+          //   World +X (pitch) → local: X=-0.118, Y=0.256 → drive local Y for up/down
+          // So we bypass world-space conversion and write local axes directly.
+          const maxYaw   = 0.65 * headTrackIntensity;
+          const maxPitch = 0.50 * headTrackIntensity;
+          lookAtEuler.set(
+             cx * maxYaw,   // local X → left / right
+             cy * maxPitch, // local Y → up / down
+            0,
+            "XYZ"
+          );
           worldOffset.setFromEuler(lookAtEuler);
-
-          // Smooth world-space chase — completely independent of anim state
           cursorOffset.slerp(worldOffset, 0.12);
-
-          // ── Back-solve: desired world quat → bone local quat ──
-          // We want the head bone's world orientation to be:
-          //   desiredWorld = cursorOffset * bindWorld
-          // where bindWorld is the bone's world quat in the rest pose.
-          // The bone's world quat = parentWorld * localQuat, so:
-          //   localQuat = parentWorld^-1 * desiredWorld
-          //             = parentWorld^-1 * cursorOffset * bindWorld
-          scene.updateMatrixWorld(false);
-
-          // Store bind-pose world quat the first time (before we ever write)
-          if (!(headBone as any).__bindWorldQuat) {
-            const bwq = new THREE.Quaternion();
-            headBone.getWorldQuaternion(bwq);
-            (headBone as any).__bindWorldQuat = bwq;
-            // DEBUG — log everything we need to understand the rig's axes
-            const pq = new THREE.Quaternion();
-            if (headBone.parent) headBone.parent.getWorldQuaternion(pq);
-            console.log("[3D] HEAD bind local quat:", JSON.stringify(headBone.quaternion));
-            console.log("[3D] HEAD bind world quat:", JSON.stringify(bwq));
-            console.log("[3D] PARENT world quat:", JSON.stringify(pq));
-            // What does "world +Y rotation" look like in bone local space?
-            const testEuler = new THREE.Euler(0, 0.3, 0, "YXZ");
-            const testWorld = new THREE.Quaternion().setFromEuler(testEuler);
-            const testLocal = pq.clone().invert().multiply(testWorld).multiply(pq);
-            const testLocalE = new THREE.Euler().setFromQuaternion(testLocal, "YXZ");
-            console.log("[3D] World +Y 0.3rad → local euler:", testLocalE.x.toFixed(3), testLocalE.y.toFixed(3), testLocalE.z.toFixed(3));
-            // And world +X rotation (pitch up):
-            const testEuler2 = new THREE.Euler(0.3, 0, 0, "YXZ");
-            const testWorld2 = new THREE.Quaternion().setFromEuler(testEuler2);
-            const testLocal2 = pq.clone().invert().multiply(testWorld2).multiply(pq);
-            const testLocalE2 = new THREE.Euler().setFromQuaternion(testLocal2, "YXZ");
-            console.log("[3D] World +X 0.3rad → local euler:", testLocalE2.x.toFixed(3), testLocalE2.y.toFixed(3), testLocalE2.z.toFixed(3));
-          }
-          const bindWorldQuat: THREE.Quaternion = (headBone as any).__bindWorldQuat;
-
-          if (headBone.parent) {
-            headBone.parent.getWorldQuaternion(parentWorldQuat);
-          } else {
-            parentWorldQuat.identity();
-          }
-
-          // desiredWorld = cursorOffset * bindWorld
-          // localQuat    = parentWorld^-1 * desiredWorld
-          localTarget
-            .copy(cursorOffset)
-            .multiply(bindWorldQuat);          // desiredWorld
-          localTarget.premultiply(parentWorldQuat.clone().invert()); // parentWorld^-1 * desiredWorld
-          headBone.quaternion.copy(localTarget);
+          headBone.quaternion.copy(bindLocalQuat).multiply(cursorOffset);
 
         } else {
           // Placeholder robot — no parent chain complexity, apply directly
