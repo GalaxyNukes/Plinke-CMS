@@ -354,6 +354,18 @@ export function HeroCharacter3D({
           worldOffset.setFromEuler(lookAtEuler);
           cursorOffset.slerp(worldOffset, 0.12);
           headBone.quaternion.copy(bindLocalQuat).multiply(cursorOffset);
+          // Force the skinned mesh skeleton to re-upload bone matrices to GPU.
+          // Without this, SkinnedMesh ignores our quaternion writes on some drivers.
+          if (!(headBone as any).__skinnedMesh) {
+            scene.traverse((obj: any) => {
+              if (obj.isSkinnedMesh && obj.skeleton) {
+                (headBone as any).__skinnedMesh = obj;
+              }
+            });
+          }
+          if ((headBone as any).__skinnedMesh) {
+            (headBone as any).__skinnedMesh.skeleton.update();
+          }
 
         } else {
           // Placeholder robot — no parent chain complexity, apply directly
