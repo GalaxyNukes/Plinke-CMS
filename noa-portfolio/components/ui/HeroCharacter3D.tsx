@@ -313,32 +313,24 @@ export function HeroCharacter3D({
 
       if (headBone) {
         if (mixer) {
-          // Force-recalculate ALL world matrices after mixer.update() writes
-          // local transforms. Must use force=true so stale parent matrices
-          // from the previous frame don't corrupt the bone-local conversion,
-          // which caused a periodic twitch every time the parent chain drifted.
-          scene.updateMatrixWorld(true);
-
-          // Snapshot animated pose AFTER world matrices are current.
-          const animPose = headBone.quaternion.clone();
-
           // ── Clamp cursor to [-1, 1] ──
           const cx = Math.max(-1, Math.min(1, mouseRef.current.x));
           const cy = Math.max(-1, Math.min(1, mouseRef.current.y));
 
-          // ── Build target rotation in WORLD space ──
+          // ── Build + smoothly chase target in WORLD space only ──
+          // cursorOffset lives in world space and slews toward the mouse target
+          // each frame. It NEVER depends on the animated bone pose or the parent
+          // chain quaternion — so animation loop resets can't cause a twitch.
           const maxRotY = 0.65 * headTrackIntensity;
           const maxRotX = 0.50 * headTrackIntensity;
-          lookAtEuler.set(
-            -cy * maxRotX,
-             cx * maxRotY,
-            0,
-            "YXZ"
-          );
+          lookAtEuler.set(-cy * maxRotX, cx * maxRotY, 0, "YXZ");
           worldOffset.setFromEuler(lookAtEuler);
+          cursorOffset.slerp(worldOffset, 0.12); // world-space chase
 
-          // ── Convert world-space rotation to bone-local space ──
-          // localOffset = P^-1 * worldOffset * P  (P = parent world quaternion)
+          // ── Convert to bone-local and apply on top of animated pose ──
+          // Read parent world quat AFTER mixer.update() so it's current.
+          // Then: localOffset = P^-1 * cursorOffset * P
+          scene.updateMatrixWorld(false);
           if (headBone.parent) {
             headBone.parent.getWorldQuaternion(parentWorldQuat);
           } else {
@@ -346,14 +338,12 @@ export function HeroCharacter3D({
           }
           localTarget
             .copy(parentWorldQuat).invert()
-            .multiply(worldOffset)
+            .multiply(cursorOffset)
             .multiply(parentWorldQuat);
 
-          // ── Smooth chase — persists across frames ──
-          cursorOffset.slerp(localTarget, 0.12);
-
-          // ── Final pose: anim base * local cursor offset ──
-          headBone.quaternion.copy(animPose).multiply(cursorOffset);
+          // Snapshot animated pose AFTER world matrices are settled, then apply offset.
+          const animPose = headBone.quaternion.clone();
+          headBone.quaternion.copy(animPose).multiply(localTarget);
 
         } else {
           // Placeholder robot — no parent chain complexity, apply directly
