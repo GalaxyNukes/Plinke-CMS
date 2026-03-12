@@ -53,8 +53,10 @@ export function HeroCharacter3D({
       0.01,
       500
     );
-    camera.position.set(panX, cameraHeight, cameraDistance);
-    camera.lookAt(0, cameraHeight * 0.6, 0);
+    // Camera positioned properly after model loads (see Step 4 below).
+    // These are placeholder values — overwritten once we know the model height.
+    camera.position.set(panX, 1, 5);
+    camera.lookAt(0, 0.6, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
@@ -156,12 +158,19 @@ export function HeroCharacter3D({
 
           console.log("[3D] Final size:", size.x.toFixed(2), size.y.toFixed(2), size.z.toFixed(2));
 
-          // Step 4: Position camera to frame the model
+          // Step 4: Position camera to frame the model.
+          // cameraHeight is a 0–2 multiplier: 1.0 = default mid-body framing,
+          // 0.0 = ground level, 2.0 = above the head.
+          // cameraDistance controls zoom — smaller = closer.
           const modelHeight = size.y;
-          camera.position.set(0, modelHeight * 0.45, modelHeight * 1.5 * (cameraDistance / 4.5));
-          camera.lookAt(0, modelHeight * 0.4, 0);
+          const baseHeight   = modelHeight * 0.45;            // default eye level
+          const heightOffset = modelHeight * (cameraHeight - 1.0) * 0.5; // shift up/down
+          const camY         = baseHeight + heightOffset;
+          const camZ         = modelHeight * 1.5 * (cameraDistance / 4.5);
+          camera.position.set(panX, camY, camZ);
+          camera.lookAt(0, camY * 0.85, 0);
 
-          console.log("[3D] Camera at:", camera.position.x.toFixed(2), camera.position.y.toFixed(2), camera.position.z.toFixed(2));
+          console.log("[3D] Camera at:", camera.position.x.toFixed(2), camera.position.y.toFixed(2), camera.position.z.toFixed(2), "| height multiplier:", cameraHeight, "| distance:", cameraDistance);
 
           scene.add(model);
 
