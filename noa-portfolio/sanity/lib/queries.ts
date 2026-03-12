@@ -49,6 +49,7 @@ export const pageQuery = groq`
           categories,
           year,
           projectLink,
+          software,
           caseStudyContent
         }
       },

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ArrowUpRight, ChevronDown } from "lucide-react";
 import { urlFor } from "@/sanity/lib/image";
 import { ScrollReveal } from "../ui/ScrollReveal";
+import { SoftwareIconList } from "../ui/SoftwareIcons";
 
 type FilterValue =
   | "All"
@@ -297,12 +298,17 @@ function ProjectCard({
               </span>
             )}
           </div>
-          <h3
-            className="font-display text-xl font-bold mb-1"
-            style={{ color: "var(--text-dark)" }}
-          >
-            {project.title}
-          </h3>
+          <div className="flex items-center justify-between gap-3 mb-1">
+            <h3
+              className="font-display text-xl font-bold"
+              style={{ color: "var(--text-dark)" }}
+            >
+              {project.title}
+            </h3>
+            {project.software?.length > 0 && (
+              <SoftwareIconList software={project.software} size={18} />
+            )}
+          </div>
           {project.description && (
             <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
               {project.description}
