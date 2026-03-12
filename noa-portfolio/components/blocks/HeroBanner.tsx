@@ -249,12 +249,13 @@ export function HeroBanner(props: any) {
       {heroDisplay === "3d" && (
         <div className="absolute inset-0 z-[1]">
           <HeroCharacter3D
-            modelUrl={hero3dModel?.modelFile?.asset?.url || null}
-            headBoneName={hero3dModel?.headBoneName || "Head"}
-            cameraDistance={hero3dModel?.cameraDistance || 4.5}
-            cameraHeight={hero3dModel?.cameraHeight || 1.0}
-            modelScale={hero3dModel?.modelScale || 1.0}
-            headTrackIntensity={hero3dModel?.headTrackIntensity || 0.6}
+            modelUrl={hero3dModel?.modelFile?.asset?.url ?? null}
+            headBoneName={hero3dModel?.headBoneName ?? "Head"}
+            cameraDistance={hero3dModel?.cameraDistance ?? 4.5}
+            cameraHeight={hero3dModel?.cameraHeight ?? 1.0}
+            modelScale={hero3dModel?.modelScale ?? 1.0}
+            modelRotationY={hero3dModel?.modelRotationY ?? 0}
+            headTrackIntensity={hero3dModel?.headTrackIntensity ?? 0.6}
             fullWidthMode={true}
           />
         </div>
