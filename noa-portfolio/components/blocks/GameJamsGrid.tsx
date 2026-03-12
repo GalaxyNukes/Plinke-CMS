@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Trophy, Calendar, Users, ExternalLink, Gamepad2 } from "lucide-react";
 import { urlFor } from "@/sanity/lib/image";
 import { ScrollReveal } from "../ui/ScrollReveal";
+import { SoftwareIconList } from "../ui/SoftwareIcons";
 
 export function GameJamsGrid(props: any) {
   const { sectionTitle = "Games", jams = [] } = props;
@@ -77,9 +78,14 @@ export function GameJamsGrid(props: any) {
                   )}
                 </div>
 
-                <h3 className="font-display text-xl font-bold mb-1" style={{ color: "var(--text-dark)" }}>
-                  {jam.gameTitle}
-                </h3>
+                <div className="flex items-center justify-between gap-3 mb-1">
+                  <h3 className="font-display text-xl font-bold" style={{ color: "var(--text-dark)" }}>
+                    {jam.gameTitle}
+                  </h3>
+                  {jam.software?.length > 0 && (
+                    <SoftwareIconList software={jam.software} size={18} />
+                  )}
+                </div>
 
                 {/* Role */}
                 {jam.role && (
