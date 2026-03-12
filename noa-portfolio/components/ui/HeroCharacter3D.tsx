@@ -344,25 +344,36 @@ export function HeroCharacter3D({
           // Smooth world-space chase — completely independent of anim state
           cursorOffset.slerp(worldOffset, 0.12);
 
-          // ── Convert world-space offset → bone-local, write directly ──
-          // localRot = P^-1 * cursorOffset * P  (P = parent world quaternion)
+          // ── Back-solve: desired world quat → bone local quat ──
+          // We want the head bone's world orientation to be:
+          //   desiredWorld = cursorOffset * bindWorld
+          // where bindWorld is the bone's world quat in the rest pose.
+          // The bone's world quat = parentWorld * localQuat, so:
+          //   localQuat = parentWorld^-1 * desiredWorld
+          //             = parentWorld^-1 * cursorOffset * bindWorld
           scene.updateMatrixWorld(false);
+
+          // Store bind-pose world quat the first time (before we ever write)
+          if (!(headBone as any).__bindWorldQuat) {
+            const bwq = new THREE.Quaternion();
+            headBone.getWorldQuaternion(bwq);
+            (headBone as any).__bindWorldQuat = bwq;
+          }
+          const bindWorldQuat: THREE.Quaternion = (headBone as any).__bindWorldQuat;
+
           if (headBone.parent) {
             headBone.parent.getWorldQuaternion(parentWorldQuat);
           } else {
             parentWorldQuat.identity();
           }
-          // Store the bind-pose quaternion the first time (before we ever write)
-          if (!(headBone as any).__bindQuat) {
-            (headBone as any).__bindQuat = headBone.quaternion.clone();
-          }
-          const bindQuat: THREE.Quaternion = (headBone as any).__bindQuat;
+
+          // desiredWorld = cursorOffset * bindWorld
+          // localQuat    = parentWorld^-1 * desiredWorld
           localTarget
-            .copy(parentWorldQuat).invert()
-            .multiply(cursorOffset)
-            .multiply(parentWorldQuat);
-          // Apply offset on top of bind pose (not animated pose — mixer no longer writes this)
-          headBone.quaternion.copy(bindQuat).multiply(localTarget);
+            .copy(cursorOffset)
+            .multiply(bindWorldQuat);          // desiredWorld
+          localTarget.premultiply(parentWorldQuat.clone().invert()); // parentWorld^-1 * desiredWorld
+          headBone.quaternion.copy(localTarget);
 
         } else {
           // Placeholder robot — no parent chain complexity, apply directly
