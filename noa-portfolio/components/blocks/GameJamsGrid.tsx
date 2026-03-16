@@ -5,6 +5,7 @@ import { Trophy, Calendar, Users, ExternalLink, Gamepad2 } from "lucide-react";
 import { urlFor } from "@/sanity/lib/image";
 import { ScrollReveal } from "../ui/ScrollReveal";
 import { SoftwareIconList } from "../ui/SoftwareIcons";
+import { CollapsibleText } from "../ui/CollapsibleText";
 
 function JamCard({ jam, delay = 0, large = false }: { jam: any; delay?: number; large?: boolean }) {
   const imgH = large ? 320 : 240;
@@ -88,9 +89,12 @@ function JamCard({ jam, delay = 0, large = false }: { jam: any; delay?: number; 
           )}
 
           {jam.description && (
-            <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--text-muted)" }}>
-              {jam.description}
-            </p>
+            <CollapsibleText
+              text={jam.description}
+              wordLimit={20}
+              className="text-sm leading-relaxed mb-4"
+              style={{ color: "var(--text-muted)" }}
+            />
           )}
 
           {/* Meta + links */}

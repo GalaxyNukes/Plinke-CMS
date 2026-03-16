@@ -6,6 +6,7 @@ import { ArrowUpRight, ChevronDown } from "lucide-react";
 import { urlFor } from "@/sanity/lib/image";
 import { ScrollReveal } from "../ui/ScrollReveal";
 import { SoftwareIconList } from "../ui/SoftwareIcons";
+import { CollapsibleText } from "../ui/CollapsibleText";
 
 type FilterValue =
   | "All"
@@ -310,9 +311,12 @@ function ProjectCard({
             )}
           </div>
           {project.description && (
-            <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
-              {project.description}
-            </p>
+            <CollapsibleText
+              text={project.description}
+              wordLimit={20}
+              className="text-sm leading-relaxed"
+              style={{ color: "var(--text-muted)" }}
+            />
           )}
         </div>
       </a>
