@@ -158,6 +158,7 @@ export const projectBySlugQuery = groq`
     projectType,
           projectGroup->{ _id, name },
     categories,
+    software,
     year,
     projectLink,
     caseStudyContent

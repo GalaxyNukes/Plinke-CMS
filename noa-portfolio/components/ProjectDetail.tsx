@@ -8,6 +8,7 @@ import { ArrowLeft, ArrowRight, ChevronLeft, ExternalLink, Play } from "lucide-r
 import { urlFor } from "@/sanity/lib/image";
 import { PortableText } from "@portabletext/react";
 import { ScrollReveal } from "./ui/ScrollReveal";
+import { SoftwareIconList } from "./ui/SoftwareIcons";
 
 function getVideoUrl(video: any): string | null {
   if (!video) return null;
@@ -228,9 +229,14 @@ export function ProjectDetail({
           </ScrollReveal>
 
           <ScrollReveal delay={0.15}>
-            <h1 className="font-display text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-4">
-              {project.title}
-            </h1>
+            <div className="flex flex-wrap items-center gap-4 mb-4">
+              <h1 className="font-display text-3xl md:text-5xl font-extrabold text-white tracking-tight">
+                {project.title}
+              </h1>
+              {project.software?.length > 0 && (
+                <SoftwareIconList software={project.software} size={22} />
+              )}
+            </div>
           </ScrollReveal>
 
           {project.description && (
