@@ -3,9 +3,58 @@ import { client } from "@/sanity/sanity.client";
 import { siteSettingsQuery } from "@/sanity/lib/queries";
 import "./globals.css";
 
+// ── Site-wide metadata ───────────────────────────────────────────────────────
 export const metadata: Metadata = {
-  title: "Noa Plinke — 3D Gameplay Animator",
-  description: "Portfolio of Noa Plinke, a 3D Gameplay Animator specializing in combat systems, procedural motion, and game development.",
+  metadataBase: new URL("https://noaplinke.com"),
+  title: {
+    default: "Noa Plinke — 3D Gameplay Animator",
+    template: "%s | Noa Plinke",
+  },
+  description:
+    "Portfolio of Noa Plinke, a 3D Gameplay Animator specializing in combat systems, procedural motion, and game development.",
+  keywords: [
+    "3D Gameplay Animator",
+    "Gameplay Animation",
+    "Procedural Animation",
+    "Combat Animation",
+    "Unreal Engine",
+    "Maya",
+    "Game Development",
+    "Motion Capture",
+    "Noa Plinke",
+  ],
+  authors: [{ name: "Noa Plinke", url: "https://noaplinke.com" }],
+  creator: "Noa Plinke",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://noaplinke.com",
+    siteName: "Noa Plinke — 3D Gameplay Animator",
+    title: "Noa Plinke — 3D Gameplay Animator",
+    description:
+      "Portfolio of Noa Plinke, a 3D Gameplay Animator specializing in combat systems, procedural motion, and game development.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Noa Plinke — 3D Gameplay Animator",
+    description:
+      "Portfolio of Noa Plinke, a 3D Gameplay Animator specializing in combat systems, procedural motion, and game development.",
+    creator: "@noaplinke",
+  },
+  alternates: {
+    canonical: "https://noaplinke.com",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 };
 
 export const revalidate = 60;
@@ -14,10 +63,46 @@ export const revalidate = 60;
  *  Only allow valid hex colours — strip anything else entirely. */
 function safeCssHex(value: unknown): string | null {
   if (typeof value !== "string") return null;
-  // Strict: must be exactly #rrggbb or #rrggbbaa
   if (/^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(value)) return value;
   return null;
 }
+
+// ── JSON-LD structured data ──────────────────────────────────────────────────
+const personJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Noa Plinke",
+  url: "https://noaplinke.com",
+  jobTitle: "3D Gameplay Animator",
+  description:
+    "3D Gameplay Animator specializing in combat systems, procedural motion, and game development.",
+  knowsAbout: [
+    "3D Animation",
+    "Gameplay Animation",
+    "Procedural Animation",
+    "Combat Systems",
+    "Unreal Engine",
+    "Maya",
+    "Motion Capture",
+    "Game Development",
+  ],
+  sameAs: [
+    "https://www.linkedin.com/in/noaplinke",
+  ],
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Noa Plinke — 3D Gameplay Animator",
+  url: "https://noaplinke.com",
+  description:
+    "Portfolio of Noa Plinke, a 3D Gameplay Animator specializing in combat systems, procedural motion, and game development.",
+  author: {
+    "@type": "Person",
+    name: "Noa Plinke",
+  },
+};
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   let themeStyle = "";
@@ -48,6 +133,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
         {themeStyle && <style dangerouslySetInnerHTML={{ __html: themeStyle }} />}
+        {/* JSON-LD structured data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
       </head>
       <body>{children}</body>
     </html>

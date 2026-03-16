@@ -262,7 +262,7 @@ export function HeroBanner(props: any) {
       )}
       {heroDisplay === "image" && heroImage && (
         <div className="absolute inset-0 z-[1]">
-          <Image src={urlFor(heroImage).width(1400).height(900).url()} alt={heroImage.alt || "Hero image"} fill className="object-cover object-center" priority />
+          <Image src={urlFor(heroImage).width(1400).height(900).url()} alt={heroImage.alt || "Noa Plinke — 3D Gameplay Animator portfolio hero"} fill className="object-cover object-center" priority />
         </div>
       )}
       {heroDisplay === "video" && (
@@ -340,7 +340,7 @@ export function HeroBanner(props: any) {
                   return null;
                 })()
               ) : posterUrl ? (
-                <Image src={posterUrl} alt="Showreel" fill className="object-cover" />
+                <Image src={posterUrl} alt="Noa Plinke gameplay animation showreel" fill className="object-cover" />
               ) : (
                 <div className="w-full h-full" style={{ background:"rgba(255,255,255,0.04)" }} />
               )}
@@ -349,7 +349,7 @@ export function HeroBanner(props: any) {
 
           {/* ── Fallback: only a poster image, no video ── */}
           {!hasVideo && posterUrl && (
-            <Image src={posterUrl} alt="Showreel thumbnail" fill className="object-cover" />
+            <Image src={posterUrl} alt="Noa Plinke gameplay animation showreel thumbnail" fill className="object-cover" />
           )}
 
           {/* "Scroll to expand" hint — only in idle state */}
