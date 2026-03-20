@@ -38,12 +38,12 @@ function JamCard({ jam, delay = 0, large = false }: { jam: any; delay?: number; 
           )}
         </div>
 
-        <div className="p-5">
+        <div className="p-5 flex flex-col gap-3">
           {/* Top line: jam name + placement badge */}
-          <div className="flex justify-between items-center mb-2">
-            <div className="flex items-center gap-2">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
               {jam.jamName && (
-                <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--accent-secondary)" }}>
+                <span className="text-xs font-bold uppercase tracking-wider leading-tight" style={{ color: "var(--accent-secondary)" }}>
                   {jam.jamName}
                 </span>
               )}
@@ -60,46 +60,49 @@ function JamCard({ jam, delay = 0, large = false }: { jam: any; delay?: number; 
             </div>
             {jam.placement && (
               <span
-                className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold shrink-0"
                 style={{ background: "rgba(201,251,0,0.1)", color: "var(--text-dark)" }}
               >
-                <Trophy size={12} /> {jam.placement}
+                <Trophy size={11} /> {jam.placement}
               </span>
             )}
           </div>
 
           {/* Title + software icons */}
-          <div className="flex items-center justify-between gap-3 mb-1">
+          <div className="flex items-start justify-between gap-3">
             <h3
-              className={`font-display font-bold ${large ? "text-2xl" : "text-xl"}`}
+              className={`font-display font-bold leading-tight ${large ? "text-2xl" : "text-xl"}`}
               style={{ color: "var(--text-dark)" }}
             >
               {jam.gameTitle}
             </h3>
             {jam.software?.length > 0 && (
-              <SoftwareIconList software={jam.software} size={18} />
+              <div className="shrink-0 pt-0.5">
+                <SoftwareIconList software={jam.software} size={18} />
+              </div>
             )}
           </div>
 
           {/* Role */}
           {jam.role && (
-            <p className="text-xs font-medium mb-2" style={{ color: "var(--accent-secondary)" }}>
+            <p className="text-xs font-medium -mt-1" style={{ color: "var(--accent-secondary)" }}>
               {jam.role}
             </p>
           )}
 
+          {/* Description */}
           {jam.description && (
             <CollapsibleText
               text={jam.description}
               wordLimit={20}
-              className="text-sm leading-relaxed mb-4"
+              className="text-sm leading-relaxed"
               style={{ color: "var(--text-muted)" }}
             />
           )}
 
           {/* Meta + links */}
-          <div className="flex justify-between items-center">
-            <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap justify-between items-center gap-y-2 mt-auto pt-1">
+            <div className="flex flex-wrap gap-x-3 gap-y-1">
               {jam.date && (
                 <span className="flex items-center gap-1 text-xs" style={{ color: "var(--text-muted)" }}>
                   <Calendar size={13} /> {jam.date}
@@ -116,7 +119,7 @@ function JamCard({ jam, delay = 0, large = false }: { jam: any; delay?: number; 
                 </span>
               )}
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 shrink-0">
               {jam.playLink && (
                 <a
                   href={jam.playLink}
