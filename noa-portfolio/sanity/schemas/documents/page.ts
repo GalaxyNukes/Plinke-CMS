@@ -5,6 +5,7 @@ export default defineType({
   title: "Page",
   type: "document",
   icon: () => "📄",
+  description: "Add, remove, and reorder sections to build your page. Drag the handles to rearrange.",
   fields: [
     defineField({
       name: "title",
@@ -21,18 +22,50 @@ export default defineType({
     }),
     defineField({
       name: "blocks",
-      title: "Page Blocks",
-      description: "Add, remove, and reorder sections to build your page",
+      title: "Page Sections",
+      description: "Drag to reorder. Click + to add a new section.",
       type: "array",
       of: [
-        { type: "heroBanner" },
-        { type: "portfolioGrid" },
-        { type: "gameJamsGrid" },
-        { type: "aboutTimeline" },
-        { type: "videoShowreel" },
-        { type: "testimonials" },
-        { type: "richTextBlock" },
-        { type: "contactBlock" },
+        {
+          type: "heroBanner",
+          title: "Hero Banner",
+          icon: () => "🎬",
+        },
+        {
+          type: "portfolioGrid",
+          title: "Portfolio Grid",
+          icon: () => "🎨",
+        },
+        {
+          type: "gameJamsGrid",
+          title: "Games Section",
+          icon: () => "🎮",
+        },
+        {
+          type: "aboutTimeline",
+          title: "About & Timeline",
+          icon: () => "👤",
+        },
+        {
+          type: "videoShowreel",
+          title: "Video Showreel",
+          icon: () => "▶️",
+        },
+        {
+          type: "testimonials",
+          title: "Testimonials",
+          icon: () => "💬",
+        },
+        {
+          type: "richTextBlock",
+          title: "Text Block",
+          icon: () => "📝",
+        },
+        {
+          type: "contactBlock",
+          title: "Contact",
+          icon: () => "✉️",
+        },
       ],
     }),
   ],

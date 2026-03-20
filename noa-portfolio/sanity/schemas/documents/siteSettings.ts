@@ -5,42 +5,62 @@ export default defineType({
   title: "Site Settings",
   type: "document",
   icon: () => "⚙️",
+  // Field groups create tabs — keeps the settings panel clean instead of one long scroll
+  groups: [
+    { name: "identity", title: "👤  Identity", default: true },
+    { name: "navigation", title: "🔗  Navigation" },
+    { name: "theme", title: "🎨  Theme & Colours" },
+    { name: "footer", title: "📄  Footer" },
+  ],
   fields: [
+    // ── Identity ──────────────────────────────────────────────────
     defineField({
       name: "siteName",
-      title: "Site Name",
+      title: "Your Name",
       type: "string",
+      group: "identity",
       initialValue: "Noa Plinke",
-      validation: (Rule) => Rule.required().error("Please enter your site name"),
-    }),
-    defineField({
-      name: "logo",
-      title: "Logo",
-      type: "image",
-      description: "Optional — if empty, the site name text will be used as the logo",
-      options: { hotspot: true },
+      description: "Used as the site title and in search results.",
+      validation: (Rule) => Rule.required().error("Please enter your name."),
     }),
     defineField({
       name: "tagline",
       title: "Tagline",
       type: "string",
+      group: "identity",
       initialValue: "Animation that hits different",
+      description: "A short phrase that describes you — shown in browser tab titles.",
     }),
     defineField({
       name: "email",
       title: "Contact Email",
       type: "string",
-      validation: (Rule) => Rule.required().error("Please add your email address"),
+      group: "identity",
+      description: "Used in the contact button and footer. e.g., hello@noaplinke.com.",
+      validation: (Rule) => Rule.required().error("Please add your email address."),
+    }),
+    defineField({
+      name: "logo",
+      title: "Logo Image",
+      type: "image",
+      group: "identity",
+      description: "Optional. If left empty, your name is shown as text in the navbar.",
+      options: { hotspot: true },
     }),
     defineField({
       name: "socialLinks",
       title: "Social Links",
       type: "array",
+      group: "identity",
+      description: "Your social media profiles. Shown in the footer.",
       of: [
         {
           type: "object",
           fields: [
-            { name: "platform", title: "Platform", type: "string",
+            {
+              name: "platform",
+              title: "Platform",
+              type: "string",
               options: {
                 list: [
                   { title: "LinkedIn", value: "linkedin" },
@@ -62,17 +82,20 @@ export default defineType({
         },
       ],
     }),
+
+    // ── Navigation ────────────────────────────────────────────────
     defineField({
       name: "navLinks",
       title: "Navigation Links",
-      description: "The links shown in the top navigation bar",
       type: "array",
+      group: "navigation",
+      description: "The links shown in the top navigation bar. Drag to reorder.",
       of: [
         {
           type: "object",
           fields: [
-            { name: "label", title: "Label", type: "string" },
-            { name: "href", title: "Link (e.g., #portfolio or /about)", type: "string" },
+            { name: "label", title: "Label", type: "string", description: "The text shown in the nav, e.g., 'Portfolio'." },
+            { name: "href", title: "Link", type: "string", description: "e.g., #portfolio (same-page anchor) or /about (separate page)." },
           ],
           preview: {
             select: { title: "label", subtitle: "href" },
@@ -82,35 +105,65 @@ export default defineType({
     }),
     defineField({
       name: "projectCategories",
-      title: "Project Categories",
-      description: "Manage the filter categories for your portfolio (e.g., Procedural Animation, Keyframe Animation)",
+      title: "Portfolio Filter Categories",
       type: "array",
+      group: "navigation",
       of: [{ type: "string" }],
+      description: "The filter options shown above the portfolio grid. Add or remove categories here.",
       initialValue: ["Procedural Animation", "Keyframe Animation", "Motion Capture"],
     }),
+
+    // ── Theme & Colours ───────────────────────────────────────────
     defineField({
       name: "theme",
-      title: "Theme Colors",
+      title: "Colour Palette",
       type: "object",
-      description: "Customize the site's color palette",
+      group: "theme",
+      description: "Changes the colour scheme across the entire site. The defaults are dark/lime/purple.",
       fields: [
-        { name: "bgDark", title: "Dark Background", type: "color", description: "Hero & footer (default: #0e0e10)" },
-        { name: "bgLight", title: "Light Background", type: "color", description: "Content sections (default: #f8f8f6)" },
-        { name: "accent", title: "Accent Color", type: "color", description: "Primary accent (default: #c9fb00 lime)" },
-        { name: "accentSecondary", title: "Secondary Accent", type: "color", description: "Secondary accent (default: #7b61ff purple)" },
+        {
+          name: "bgDark",
+          title: "Dark Background",
+          type: "color",
+          description: "Used for the hero, footer, and dark sections. Default: #0e0e10.",
+        },
+        {
+          name: "bgLight",
+          title: "Light Background",
+          type: "color",
+          description: "Used for portfolio, games, and about sections. Default: #f8f8f6.",
+        },
+        {
+          name: "accent",
+          title: "Primary Accent",
+          type: "color",
+          description: "The main highlight colour — buttons, tags, hover states. Default: #c9fb00 (lime).",
+        },
+        {
+          name: "accentSecondary",
+          title: "Secondary Accent",
+          type: "color",
+          description: "Used for category labels, links, and decorative details. Default: #7b61ff (purple).",
+        },
       ],
     }),
+
+    // ── Footer ────────────────────────────────────────────────────
     defineField({
       name: "footerText",
       title: "Footer Heading",
       type: "string",
+      group: "footer",
       initialValue: "Let's make something awesome",
+      description: "The big heading shown above your email in the footer.",
     }),
     defineField({
       name: "copyright",
       title: "Copyright Text",
       type: "string",
+      group: "footer",
       initialValue: "© 2025 Noa Plinke",
+      description: "Shown at the very bottom of the site.",
     }),
   ],
   preview: {
