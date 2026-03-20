@@ -252,28 +252,26 @@ function ProjectCard({
         className="card-hover block rounded-[14px] overflow-hidden group"
         style={{ background: "var(--bg-card)" }}
       >
-        <div className="overflow-hidden rounded-[14px]">
+        {/* Aspect-ratio thumbnail — scales at every breakpoint, focal point crop centres subject */}
+        <div className={`relative w-full overflow-hidden rounded-[14px] ${large ? "aspect-video" : "aspect-[4/3]"}`}>
           {project.thumbnail ? (
             <Image
               src={urlFor(project.thumbnail)
                 .width(800)
-                .height(large ? 400 : 320)
+                .height(large ? 450 : 600)
+                .fit("crop")
+                .crop("focalpoint")
                 .url()}
               alt={project.thumbnail.alt || project.title}
-              width={800}
-              height={large ? 400 : 320}
-              className="w-full object-cover img-zoom"
-              style={{ height: large ? "320px" : "240px" }}
+              fill
+              className="object-cover img-zoom"
             />
           ) : (
             <div
-              className="w-full flex items-center justify-center text-white/20 text-sm img-zoom"
-              style={{
-                height: large ? "320px" : "240px",
-                background: "linear-gradient(135deg, #1a1a2e, #16213e, #0f3460)",
-              }}
+              className="absolute inset-0 flex items-center justify-center text-white/20 text-sm"
+              style={{ background: "linear-gradient(135deg, #1a1a2e, #16213e, #0f3460)" }}
             >
-              800×{large ? 400 : 320} — Project Image
+              Project Image
             </div>
           )}
         </div>

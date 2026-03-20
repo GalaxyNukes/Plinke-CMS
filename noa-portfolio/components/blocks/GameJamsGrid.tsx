@@ -8,8 +8,10 @@ import { SoftwareIconList } from "../ui/SoftwareIcons";
 import { CollapsibleText } from "../ui/CollapsibleText";
 
 function JamCard({ jam, delay = 0, large = false }: { jam: any; delay?: number; large?: boolean }) {
-  const imgH = large ? 320 : 240;
-  const imgSrcH = large ? 400 : 280;
+  // Aspect ratio: large featured cards use 16/9, small grid cards use 4/3 (slightly taller)
+  // This scales proportionally at every breakpoint — no fixed pixel heights that over-crop.
+  // Sanity's focalpoint crop ensures the subject stays centred regardless of card width.
+  const aspectClass = large ? "aspect-video" : "aspect-[4/3]";
 
   return (
     <ScrollReveal delay={delay}>
@@ -18,22 +20,20 @@ function JamCard({ jam, delay = 0, large = false }: { jam: any; delay?: number; 
         style={{ background: "var(--bg-card)" }}
       >
         {/* Thumbnail */}
-        <div className="overflow-hidden">
+        <div className={`relative w-full overflow-hidden ${aspectClass}`}>
           {jam.thumbnail ? (
             <Image
-              src={urlFor(jam.thumbnail).width(800).height(imgSrcH).url()}
+              src={urlFor(jam.thumbnail).width(800).height(large ? 450 : 600).fit("crop").crop("focalpoint").url()}
               alt={jam.thumbnail.alt || jam.gameTitle}
-              width={800}
-              height={imgSrcH}
-              className={`w-full object-cover img-zoom`}
-              style={{ height: `${imgH}px` }}
+              fill
+              className="object-cover img-zoom"
             />
           ) : (
             <div
-              className="w-full flex items-center justify-center text-white/20 text-sm img-zoom"
-              style={{ height: `${imgH}px`, background: "linear-gradient(135deg, #2a1a4e, #1a3a5c)" }}
+              className="absolute inset-0 flex items-center justify-center text-white/20 text-sm"
+              style={{ background: "linear-gradient(135deg, #2a1a4e, #1a3a5c)" }}
             >
-              800×{imgSrcH} — Game Screenshot
+              Game Screenshot
             </div>
           )}
         </div>
