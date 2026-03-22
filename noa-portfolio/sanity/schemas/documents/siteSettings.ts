@@ -32,6 +32,16 @@ export default defineType({
       description: "A short phrase that describes you — shown in browser tab titles.",
     }),
     defineField({
+      name: "siteDescription",
+      title: "Site Description",
+      type: "text",
+      rows: 3,
+      group: "identity",
+      initialValue: "Portfolio of Noa Plinke, a 3D Gameplay Animator specializing in combat systems, procedural motion, and game development.",
+      description: "The description shown in Google search results, link previews (WhatsApp, Messenger, LinkedIn, Discord etc.), and browser tooltips. Keep it to 1–2 sentences, ideally under 160 characters.",
+      validation: (Rule) => Rule.max(300).warning("Over 160 characters may get cut off in search results."),
+    }),
+    defineField({
       name: "email",
       title: "Contact Email",
       type: "string",

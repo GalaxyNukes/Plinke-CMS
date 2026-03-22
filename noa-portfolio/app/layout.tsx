@@ -6,12 +6,14 @@ import "./globals.css";
 // ── Site-wide metadata (dynamic — picks up CMS OG image if set) ─────────────
 export async function generateMetadata(): Promise<Metadata> {
   let ogImageUrl: string | null = null;
+  let description = "Portfolio of Noa Plinke, a 3D Gameplay Animator specializing in combat systems, procedural motion, and game development.";
   try {
     if (client) {
       const settings = await client.fetch(siteSettingsQuery);
       ogImageUrl = settings?.ogImage?.asset?.url ?? null;
+      if (settings?.siteDescription) description = settings.siteDescription;
     }
-  } catch { /* fall through to default */ }
+  } catch { /* fall through to defaults */ }
 
   const images = ogImageUrl
     ? [{ url: ogImageUrl, width: 1200, height: 630, alt: "Noa Plinke — 3D Gameplay Animator" }]
@@ -23,8 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
       default: "Noa Plinke — 3D Gameplay Animator",
       template: "%s | Noa Plinke",
     },
-    description:
-      "Portfolio of Noa Plinke, a 3D Gameplay Animator specializing in combat systems, procedural motion, and game development.",
+    description,
     keywords: [
       "3D Gameplay Animator",
       "Gameplay Animation",
@@ -44,15 +45,13 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "https://noaplinke.com",
       siteName: "Noa Plinke — 3D Gameplay Animator",
       title: "Noa Plinke — 3D Gameplay Animator",
-      description:
-        "Portfolio of Noa Plinke, a 3D Gameplay Animator specializing in combat systems, procedural motion, and game development.",
+      description,
       ...(images && { images }),
     },
     twitter: {
       card: "summary_large_image",
       title: "Noa Plinke — 3D Gameplay Animator",
-      description:
-        "Portfolio of Noa Plinke, a 3D Gameplay Animator specializing in combat systems, procedural motion, and game development.",
+      description,
       creator: "@noaplinke",
       ...(images && { images: images.map(i => i.url) }),
     },
