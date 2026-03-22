@@ -8,17 +8,24 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function OgImage() {
-  // If a custom OG image is uploaded in the CMS, redirect to it directly.
-  // Next.js ImageResponse doesn't support fetching arbitrary external images,
-  // so we return a redirect-style Response pointing at the Sanity CDN URL.
+  // If a custom OG image is uploaded in the CMS, fetch it and re-serve it
+  // with explicit image headers so social crawlers accept it correctly.
   try {
     if (client) {
       const settings = await client.fetch(siteSettingsQuery);
       const cmsUrl: string | null = settings?.ogImage?.asset?.url ?? null;
       if (cmsUrl) {
-        // Append Sanity image transformation params for correct sizing
-        const finalUrl = `${cmsUrl}?w=1200&h=630&fit=crop&auto=format`;
-        return fetch(finalUrl);
+        const finalUrl = `${cmsUrl}?w=1200&h=630&fit=crop&auto=format&fm=png`;
+        const upstream = await fetch(finalUrl);
+        if (upstream.ok) {
+          const buffer = await upstream.arrayBuffer();
+          return new Response(buffer, {
+            headers: {
+              "Content-Type": "image/png",
+              "Cache-Control": "public, max-age=3600, s-maxage=3600",
+            },
+          });
+        }
       }
     }
   } catch { /* fall through to generated image */ }
