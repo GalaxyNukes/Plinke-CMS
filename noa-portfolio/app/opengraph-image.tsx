@@ -1,4 +1,6 @@
 import { ImageResponse } from "next/og";
+import { client } from "@/sanity/sanity.client";
+import { siteSettingsQuery } from "@/sanity/lib/queries";
 
 export const runtime = "edge";
 export const alt = "Noa Plinke — 3D Gameplay Animator";
@@ -6,6 +8,22 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function OgImage() {
+  // If a custom OG image is uploaded in the CMS, redirect to it directly.
+  // Next.js ImageResponse doesn't support fetching arbitrary external images,
+  // so we return a redirect-style Response pointing at the Sanity CDN URL.
+  try {
+    if (client) {
+      const settings = await client.fetch(siteSettingsQuery);
+      const cmsUrl: string | null = settings?.ogImage?.asset?.url ?? null;
+      if (cmsUrl) {
+        // Append Sanity image transformation params for correct sizing
+        const finalUrl = `${cmsUrl}?w=1200&h=630&fit=crop&auto=format`;
+        return fetch(finalUrl);
+      }
+    }
+  } catch { /* fall through to generated image */ }
+
+  // ── Fallback: branded generated image ─────────────────────────────────────
   return new ImageResponse(
     (
       <div
@@ -21,17 +39,16 @@ export default async function OgImage() {
           position: "relative",
         }}
       >
-        {/* Accent dot grid background */}
+        {/* Dot grid */}
         <div
           style={{
             position: "absolute",
             inset: 0,
-            backgroundImage:
-              "radial-gradient(circle, #c9fb0022 1px, transparent 1px)",
+            backgroundImage: "radial-gradient(circle, #c9fb0022 1px, transparent 1px)",
             backgroundSize: "40px 40px",
           }}
         />
-        {/* Lime accent bar */}
+        {/* Lime top bar */}
         <div
           style={{
             position: "absolute",
@@ -42,7 +59,7 @@ export default async function OgImage() {
             background: "#c9fb00",
           }}
         />
-        {/* Purple accent glow */}
+        {/* Purple glow */}
         <div
           style={{
             position: "absolute",
@@ -54,72 +71,20 @@ export default async function OgImage() {
             background: "radial-gradient(circle, #7b61ff44 0%, transparent 70%)",
           }}
         />
-        {/* Content */}
         <div style={{ display: "flex", flexDirection: "column", gap: "16px", zIndex: 1 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              marginBottom: "8px",
-            }}
-          >
-            <div
-              style={{
-                width: "10px",
-                height: "10px",
-                borderRadius: "50%",
-                background: "#c9fb00",
-              }}
-            />
-            <span
-              style={{
-                fontFamily: "sans-serif",
-                fontSize: "18px",
-                fontWeight: 600,
-                color: "#c9fb00",
-                letterSpacing: "0.15em",
-                textTransform: "uppercase",
-              }}
-            >
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
+            <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#c9fb00" }} />
+            <span style={{ fontFamily: "sans-serif", fontSize: "18px", fontWeight: 600, color: "#c9fb00", letterSpacing: "0.15em", textTransform: "uppercase" }}>
               noaplinke.com
             </span>
           </div>
-          <h1
-            style={{
-              fontFamily: "sans-serif",
-              fontSize: "72px",
-              fontWeight: 800,
-              color: "#ffffff",
-              lineHeight: 1.0,
-              margin: 0,
-              letterSpacing: "-0.02em",
-            }}
-          >
+          <h1 style={{ fontFamily: "sans-serif", fontSize: "72px", fontWeight: 800, color: "#ffffff", lineHeight: 1.0, margin: 0, letterSpacing: "-0.02em" }}>
             Noa Plinke
           </h1>
-          <p
-            style={{
-              fontFamily: "sans-serif",
-              fontSize: "28px",
-              fontWeight: 400,
-              color: "#7b61ff",
-              margin: 0,
-              letterSpacing: "0.02em",
-            }}
-          >
+          <p style={{ fontFamily: "sans-serif", fontSize: "28px", fontWeight: 400, color: "#7b61ff", margin: 0, letterSpacing: "0.02em" }}>
             3D Gameplay Animator
           </p>
-          <p
-            style={{
-              fontFamily: "sans-serif",
-              fontSize: "20px",
-              color: "#7a7a80",
-              margin: 0,
-              maxWidth: "700px",
-              lineHeight: 1.5,
-            }}
-          >
+          <p style={{ fontFamily: "sans-serif", fontSize: "20px", color: "#7a7a80", margin: 0, maxWidth: "700px", lineHeight: 1.5 }}>
             Combat systems · Procedural motion · Game development
           </p>
         </div>
