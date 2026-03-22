@@ -107,6 +107,7 @@ export const siteSettingsQuery = groq`
   *[_type == "siteSettings"][0]{
     siteName,
     logo,
+    ogImage{ asset->{ url } },
     tagline,
     email,
     socialLinks,

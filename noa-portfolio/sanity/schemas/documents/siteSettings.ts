@@ -48,6 +48,17 @@ export default defineType({
       options: { hotspot: true },
     }),
     defineField({
+      name: "ogImage",
+      title: "Social Share Image (OG Image)",
+      type: "image",
+      group: "identity",
+      description: "The image shown when someone shares your site on LinkedIn, Twitter, Discord, etc. Ideal size: 1200×630px. If left empty, an auto-generated branded image is used.",
+      options: { hotspot: true },
+      fields: [
+        { name: "alt", title: "Alt Text", type: "string", description: "Describe the image." },
+      ],
+    }),
+    defineField({
       name: "socialLinks",
       title: "Social Links",
       type: "array",

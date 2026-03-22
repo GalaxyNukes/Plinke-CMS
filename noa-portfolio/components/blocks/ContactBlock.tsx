@@ -31,6 +31,7 @@ export function ContactBlock(props: any) {
 
   return (
     <section
+      id="contact"
       className="rounded-card -mt-5 relative z-[5] py-20 px-10 text-center overflow-hidden"
       style={{ background: isDark ? "var(--bg-dark)" : "var(--bg-light)" }}
     >

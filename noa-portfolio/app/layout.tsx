@@ -3,59 +3,75 @@ import { client } from "@/sanity/sanity.client";
 import { siteSettingsQuery } from "@/sanity/lib/queries";
 import "./globals.css";
 
-// ── Site-wide metadata ───────────────────────────────────────────────────────
-export const metadata: Metadata = {
-  metadataBase: new URL("https://noaplinke.com"),
-  title: {
-    default: "Noa Plinke — 3D Gameplay Animator",
-    template: "%s | Noa Plinke",
-  },
-  description:
-    "Portfolio of Noa Plinke, a 3D Gameplay Animator specializing in combat systems, procedural motion, and game development.",
-  keywords: [
-    "3D Gameplay Animator",
-    "Gameplay Animation",
-    "Procedural Animation",
-    "Combat Animation",
-    "Unreal Engine",
-    "Maya",
-    "Game Development",
-    "Motion Capture",
-    "Noa Plinke",
-  ],
-  authors: [{ name: "Noa Plinke", url: "https://noaplinke.com" }],
-  creator: "Noa Plinke",
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: "https://noaplinke.com",
-    siteName: "Noa Plinke — 3D Gameplay Animator",
-    title: "Noa Plinke — 3D Gameplay Animator",
+// ── Site-wide metadata (dynamic — picks up CMS OG image if set) ─────────────
+export async function generateMetadata(): Promise<Metadata> {
+  let ogImageUrl: string | null = null;
+  try {
+    if (client) {
+      const settings = await client.fetch(siteSettingsQuery);
+      ogImageUrl = settings?.ogImage?.asset?.url ?? null;
+    }
+  } catch { /* fall through to default */ }
+
+  const images = ogImageUrl
+    ? [{ url: ogImageUrl, width: 1200, height: 630, alt: "Noa Plinke — 3D Gameplay Animator" }]
+    : undefined; // falls back to /opengraph-image auto-generated route
+
+  return {
+    metadataBase: new URL("https://noaplinke.com"),
+    title: {
+      default: "Noa Plinke — 3D Gameplay Animator",
+      template: "%s | Noa Plinke",
+    },
     description:
       "Portfolio of Noa Plinke, a 3D Gameplay Animator specializing in combat systems, procedural motion, and game development.",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Noa Plinke — 3D Gameplay Animator",
-    description:
-      "Portfolio of Noa Plinke, a 3D Gameplay Animator specializing in combat systems, procedural motion, and game development.",
-    creator: "@noaplinke",
-  },
-  alternates: {
-    canonical: "https://noaplinke.com",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+    keywords: [
+      "3D Gameplay Animator",
+      "Gameplay Animation",
+      "Procedural Animation",
+      "Combat Animation",
+      "Unreal Engine",
+      "Maya",
+      "Game Development",
+      "Motion Capture",
+      "Noa Plinke",
+    ],
+    authors: [{ name: "Noa Plinke", url: "https://noaplinke.com" }],
+    creator: "Noa Plinke",
+    openGraph: {
+      type: "website",
+      locale: "en_US",
+      url: "https://noaplinke.com",
+      siteName: "Noa Plinke — 3D Gameplay Animator",
+      title: "Noa Plinke — 3D Gameplay Animator",
+      description:
+        "Portfolio of Noa Plinke, a 3D Gameplay Animator specializing in combat systems, procedural motion, and game development.",
+      ...(images && { images }),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Noa Plinke — 3D Gameplay Animator",
+      description:
+        "Portfolio of Noa Plinke, a 3D Gameplay Animator specializing in combat systems, procedural motion, and game development.",
+      creator: "@noaplinke",
+      ...(images && { images: images.map(i => i.url) }),
+    },
+    alternates: {
+      canonical: "https://noaplinke.com",
+    },
+    robots: {
       index: true,
       follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
     },
-  },
-};
+  };
+}
 
 export const revalidate = 60;
 
