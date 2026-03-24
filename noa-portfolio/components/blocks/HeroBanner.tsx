@@ -150,8 +150,8 @@ export function HeroBanner(props: any) {
       progressRef.current = p;
       setScrollProgress(p);
 
-      // Release at 95% — let the page scroll freely from here
-      if (p >= 0.95) {
+      // Release at 100% — fully expanded, then let the page scroll freely
+      if (p >= 1) {
         unlockedRef.current = true;
         setScrollProgress(1);
         progressRef.current = 1;
