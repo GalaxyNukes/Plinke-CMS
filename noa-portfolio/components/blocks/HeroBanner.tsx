@@ -151,7 +151,30 @@ export function HeroBanner(props: any) {
     }
 
     const onWheel = (e: WheelEvent) => {
-      if (unlockedRef.current) return;
+      // Already unlocked — only intercept if user scrolled back to top and is scrolling up
+      if (unlockedRef.current) {
+        if (
+          e.deltaY < 0 &&
+          window.scrollY <= 0 &&
+          Date.now() - unlockTimeRef.current > 500
+        ) {
+          e.preventDefault();
+          accumulated.current = Math.max(0, accumulated.current + e.deltaY); // deltaY < 0 shrinks
+          const p = accumulated.current / EXPAND_PX;
+          progressRef.current = p;
+          setScrollProgress(p);
+          if (p <= 0) {
+            // Fully collapsed — full reset
+            unlockedRef.current = false;
+            unlockTimeRef.current = 0;
+            accumulated.current = 0;
+            progressRef.current = 0;
+            setScrollProgress(0);
+          }
+        }
+        return;
+      }
+      // Locked phase — expand on scroll-down
       if (!heroInView()) return;
       e.preventDefault();
       applyDelta(e.deltaY);
@@ -162,38 +185,43 @@ export function HeroBanner(props: any) {
       touchStartY = e.touches[0].clientY;
     };
     const onTouchMove = (e: TouchEvent) => {
-      if (unlockedRef.current) return;
-      if (!heroInView()) return;
       const dy = touchStartY - e.touches[0].clientY;
       if (Math.abs(dy) < 5) return;
-      e.preventDefault();
       touchStartY = e.touches[0].clientY;
+
+      // Unlocked + back at top + swiping up = shrink
+      if (unlockedRef.current) {
+        if (dy < 0 && window.scrollY <= 0 && Date.now() - unlockTimeRef.current > 500) {
+          e.preventDefault();
+          accumulated.current = Math.max(0, accumulated.current + dy * 2);
+          const p = accumulated.current / EXPAND_PX;
+          progressRef.current = p;
+          setScrollProgress(p);
+          if (p <= 0) {
+            unlockedRef.current = false;
+            unlockTimeRef.current = 0;
+            accumulated.current = 0;
+            progressRef.current = 0;
+            setScrollProgress(0);
+          }
+        }
+        return;
+      }
+      if (!heroInView()) return;
+      e.preventDefault();
       applyDelta(dy * 2);
     };
 
-    // Reset only when user has genuinely scrolled back to top (with cooldown after unlock)
-    const onScroll = () => {
-      if (!unlockedRef.current) return;
-      // Ignore scroll events fired within 500ms of unlocking — they're residual
-      if (Date.now() - unlockTimeRef.current < 500) return;
-      if (window.scrollY < 10) {
-        unlockedRef.current = false;
-        accumulated.current = 0;
-        progressRef.current = 0;
-        setScrollProgress(0);
-      }
-    };
+    // (reset is handled by wheel-up / touch-up above)
 
     window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: false });
-    window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
-      window.removeEventListener("scroll", onScroll);
       unlockScroll();
     };
   }, [hasThumb]); // eslint-disable-line react-hooks/exhaustive-deps
