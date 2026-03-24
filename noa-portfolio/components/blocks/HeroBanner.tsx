@@ -117,8 +117,9 @@ export function HeroBanner(props: any) {
   const accumulated = useRef(0);
   const progressRef = useRef(0);
   const unlockedRef = useRef(false);
+  const unlockTimeRef = useRef(0); // timestamp of unlock — used to ignore reset for a brief window
 
-  // Continuous scroll-driven thumbnail: lock page while expanding, release at 95%
+  // Continuous scroll-driven thumbnail: lock page while expanding, release at 100%
   useEffect(() => {
     if (!hasThumb) return;
 
@@ -129,11 +130,9 @@ export function HeroBanner(props: any) {
     }
 
     function applyDelta(delta: number) {
-      if (unlockedRef.current) return; // already released, ignore
+      if (unlockedRef.current) return;
 
-      // Lock on first downward movement while hero is visible
       if (delta > 0 && heroInView()) lockScroll();
-
       if (!isLocked.current) return;
 
       accumulated.current = Math.max(0, Math.min(EXPAND_PX, accumulated.current + delta));
@@ -141,14 +140,13 @@ export function HeroBanner(props: any) {
       progressRef.current = p;
       setScrollProgress(p);
 
-      // Release at 100% — fully expanded, then let the page scroll freely
       if (p >= 1) {
         unlockedRef.current = true;
         setScrollProgress(1);
         progressRef.current = 1;
+        unlockTimeRef.current = Date.now();
         unlockScroll();
-        // Nudge the page so it starts scrolling past the hero immediately
-        window.scrollBy({ top: 2, behavior: "instant" });
+        // No scrollBy — removing overflow:hidden is sufficient to resume scrolling
       }
     }
 
@@ -170,12 +168,14 @@ export function HeroBanner(props: any) {
       if (Math.abs(dy) < 5) return;
       e.preventDefault();
       touchStartY = e.touches[0].clientY;
-      applyDelta(dy * 2); // touch needs a bit more sensitivity
+      applyDelta(dy * 2);
     };
 
-    // Reset when user scrolls back to the very top of the page
+    // Reset only when user has genuinely scrolled back to top (with cooldown after unlock)
     const onScroll = () => {
       if (!unlockedRef.current) return;
+      // Ignore scroll events fired within 500ms of unlocking — they're residual
+      if (Date.now() - unlockTimeRef.current < 500) return;
       if (window.scrollY < 10) {
         unlockedRef.current = false;
         accumulated.current = 0;
@@ -194,7 +194,7 @@ export function HeroBanner(props: any) {
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("scroll", onScroll);
-      unlockScroll(); // safety: release on unmount
+      unlockScroll();
     };
   }, [hasThumb]); // eslint-disable-line react-hooks/exhaustive-deps
 
