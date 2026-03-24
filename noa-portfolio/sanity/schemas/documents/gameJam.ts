@@ -35,6 +35,15 @@ export default defineType({
       validation: (Rule) => Rule.required().error("Please enter the game title."),
     }),
     defineField({
+      name: "slug",
+      title: "URL Slug",
+      type: "slug",
+      fieldset: "core",
+      options: { source: "gameTitle", maxLength: 96 },
+      description: "Auto-generated from the title. Used for the game detail page URL.",
+      validation: (Rule) => Rule.required().error("A slug is required for the detail page."),
+    }),
+    defineField({
       name: "thumbnail",
       title: "Screenshot / Thumbnail",
       type: "image",
@@ -47,11 +56,19 @@ export default defineType({
     }),
     defineField({
       name: "description",
-      title: "Short Description",
+      title: "Short Description (homepage card)",
       type: "text",
       rows: 3,
       fieldset: "core",
       description: "1–2 sentences about the game and your contribution. Shown on the card.",
+    }),
+    defineField({
+      name: "detailDescription",
+      title: "Detail Page Description",
+      type: "text",
+      rows: 6,
+      fieldset: "core",
+      description: "Shown on the game detail page. Can be longer. Falls back to the card description if left blank.",
     }),
     defineField({
       name: "role",

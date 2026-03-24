@@ -62,12 +62,20 @@ export default defineType({
     }),
     defineField({
       name: "description",
-      title: "Short Description",
+      title: "Short Description (homepage card)",
       type: "text",
       rows: 3,
       fieldset: "core",
-      description: "Shown on the card and project page. Keep it to 1–2 punchy sentences.",
+      description: "Shown on the homepage portfolio card. Keep it to 1–2 punchy sentences.",
       validation: (Rule) => Rule.max(300).warning("Try to keep descriptions under 300 characters for best display."),
+    }),
+    defineField({
+      name: "detailDescription",
+      title: "Detail Page Description",
+      type: "text",
+      rows: 6,
+      fieldset: "core",
+      description: "Shown on the project detail page. Can be longer and more descriptive than the card description. Falls back to the card description if left blank.",
     }),
     defineField({
       name: "projectType",
@@ -100,14 +108,7 @@ export default defineType({
       type: "array",
       fieldset: "core",
       of: [{ type: "string" }],
-      options: {
-        list: [
-          { title: "Procedural Animation", value: "Procedural Animation" },
-          { title: "Keyframe Animation", value: "Keyframe Animation" },
-          { title: "Motion Capture", value: "Motion Capture" },
-        ],
-      },
-      description: "Used for the portfolio filter. Select all that apply.",
+      description: "Used for the portfolio filter. Type any category — match the names you've set in Site Settings → Portfolio Filter Categories.",
     }),
 
     // ── Media ──────────────────────────────────────────────────────

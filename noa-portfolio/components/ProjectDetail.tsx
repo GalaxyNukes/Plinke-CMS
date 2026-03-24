@@ -239,10 +239,10 @@ export function ProjectDetail({
             </div>
           </ScrollReveal>
 
-          {project.description && (
+          {(project.detailDescription || project.description) && (
             <ScrollReveal delay={0.2}>
               <p className="text-white/50 text-lg leading-relaxed max-w-2xl mb-6">
-                {project.description}
+                {project.detailDescription || project.description}
               </p>
             </ScrollReveal>
           )}

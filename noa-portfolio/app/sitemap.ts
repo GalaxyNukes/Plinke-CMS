@@ -36,5 +36,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // CMS unavailable during build — skip dynamic routes
   }
 
-  return [...staticRoutes, ...projectRoutes];
+  // Dynamic game jam routes
+  let gameRoutes: MetadataRoute.Sitemap = [];
+  try {
+    if (client) {
+      const jams = await client.fetch<{ slug: string; _updatedAt: string }[]>(
+        groq`*[_type == "gameJam" && defined(slug.current)]{
+          "slug": slug.current,
+          _updatedAt
+        }`
+      );
+      gameRoutes = jams.map((j) => ({
+        url: `${BASE_URL}/games/${j.slug}`,
+        lastModified: new Date(j._updatedAt),
+        changeFrequency: "monthly" as const,
+        priority: 0.7,
+      }));
+    }
+  } catch {
+    // CMS unavailable during build — skip dynamic routes
+  }
+
+  return [...staticRoutes, ...projectRoutes, ...gameRoutes];
 }

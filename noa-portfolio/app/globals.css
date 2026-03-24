@@ -73,7 +73,7 @@ body {
 
 /* ── FLICKER FIX: Force GPU compositing on rounded sections ── */
 .rounded-card {
-  border-radius: 24px;
+  border-radius: 0;
   /* GPU layer promotion — prevents subpixel rendering flicker at edges */
   transform: translateZ(0);
   -webkit-transform: translateZ(0);

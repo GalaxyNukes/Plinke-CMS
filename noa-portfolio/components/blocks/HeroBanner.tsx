@@ -51,24 +51,7 @@ function resolveColor(c: any): string | undefined {
   return undefined;
 }
 
-// Scroll-lock helpers
-let _savedScrollY = 0;
-function lockScroll() {
-  _savedScrollY = window.scrollY;
-  document.body.style.overflow = "hidden";
-  document.body.style.position = "fixed";
-  document.body.style.top      = `-${_savedScrollY}px`;
-  document.body.style.width    = "100%";
-}
-function unlockScroll() {
-  document.body.style.overflow = "";
-  document.body.style.position = "";
-  document.body.style.top      = "";
-  document.body.style.width    = "";
-  window.scrollTo(0, _savedScrollY);
-}
-
-type Phase = "idle" | "expanding" | "expanded";
+function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
 
 export function HeroBanner(props: any) {
   const {
@@ -100,18 +83,12 @@ export function HeroBanner(props: any) {
   const isEmbed  = hasVideo && isEmbedUrl(videoUrl!);
   const hasThumb = hasVideo || !!secondaryThumbnail;
 
-  const [phase, setPhase]   = useState<Phase>("idle");
-  const phaseRef            = useRef<Phase>("idle");
-  const heroRef             = useRef<HTMLElement>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const heroRef = useRef<HTMLElement>(null);
 
   // ONE video element — always mounted, never remounted
   // This is the key: keeping the same DOM node means playback never interrupts
   const videoRef = useRef<HTMLVideoElement>(null);
-
-  function commitPhase(p: Phase) {
-    phaseRef.current = p;
-    setPhase(p);
-  }
 
   // Autoplay muted loop on mount
   useEffect(() => {
@@ -122,91 +99,26 @@ export function HeroBanner(props: any) {
     return () => clearTimeout(t);
   }, [hasVideo, isEmbed]);
 
-  // Scroll intercept
+  // Continuous scroll-driven thumbnail expansion
   useEffect(() => {
     if (!hasThumb) return;
-    let touchStartY = 0;
-
-    const onWheel = (e: WheelEvent) => {
+    const onScroll = () => {
       if (!heroRef.current) return;
       const rect = heroRef.current.getBoundingClientRect();
-      if (rect.bottom <= 0 || rect.top >= window.innerHeight) return;
-      if (phaseRef.current === "idle" && e.deltaY > 0) {
-        e.preventDefault();
-        lockScroll();
-        commitPhase("expanding");
-      } else if (phaseRef.current === "expanding") {
-        e.preventDefault();
-      }
+      const heroH = heroRef.current.offsetHeight;
+      // scrolled = how many px we've scrolled past the top of the hero
+      const scrolled = -rect.top;
+      const threshold = heroH * 0.65;
+      const p = Math.max(0, Math.min(1, scrolled / threshold));
+      setScrollProgress(p);
     };
-    const onTouchStart = (e: TouchEvent) => {
-      // Only arm if the hero is actually covering the top portion of the screen
-      if (!heroRef.current) return;
-      const rect = heroRef.current.getBoundingClientRect();
-      if (rect.top < window.innerHeight * 0.5 && rect.bottom > 0) {
-        touchStartY = e.touches[0].clientY;
-      } else {
-        touchStartY = -1; // sentinel: don't trigger
-      }
-    };
-    const onTouchMove  = (e: TouchEvent) => {
-      if (touchStartY < 0) return; // hero not in view when touch started
-      if (!heroRef.current) return;
-      const rect = heroRef.current.getBoundingClientRect();
-      if (rect.bottom <= 0 || rect.top >= window.innerHeight) return;
-      const dy = touchStartY - e.touches[0].clientY;
-      // 40px threshold — filters out accidental taps and small scrolls
-      if (phaseRef.current === "idle" && dy > 40) {
-        e.preventDefault();
-        lockScroll();
-        commitPhase("expanding");
-      } else if (phaseRef.current === "expanding") {
-        e.preventDefault();
-      }
-    };
-
-    window.addEventListener("wheel",      onWheel,      { passive: false });
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove",  onTouchMove,  { passive: false });
-    return () => {
-      window.removeEventListener("wheel",      onWheel);
-      window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchmove",  onTouchMove);
-      // If we unmount mid-expansion (e.g. route change), release the scroll lock
-      if (phaseRef.current !== "idle") {
-        unlockScroll();
-      }
-    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll(); // sync on mount
+    return () => window.removeEventListener("scroll", onScroll);
   }, [hasThumb]);
 
-  // Unlock scroll after CSS transition finishes
-  useEffect(() => {
-    if (phase !== "expanding") return;
-    const id = setTimeout(() => {
-      commitPhase("expanded");
-      unlockScroll();
-    }, 700);
-    return () => clearTimeout(id);
-  }, [phase]);
-
-  // Reset when hero fully exits viewport
-  useEffect(() => {
-    if (!hasThumb) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting && phaseRef.current !== "idle") {
-          commitPhase("idle");
-        }
-      },
-      { threshold: 0 }
-    );
-    if (heroRef.current) observer.observe(heroRef.current);
-    return () => observer.disconnect();
-  }, [hasThumb]);
-
-  const isExpanding = phase === "expanding";
-  const isExpanded  = phase === "expanded";
-  const thumbActive = isExpanding || isExpanded;
+  const thumbActive = scrollProgress > 0.01;
+  const thumbExpanded = scrollProgress > 0.99;
 
   const posterUrl = secondaryThumbnail
     ? urlFor(secondaryThumbnail).width(800).height(450).url()
@@ -284,31 +196,32 @@ export function HeroBanner(props: any) {
           One single <video> element lives here — never remounted — so
           playback is never interrupted by the expansion.
       ────────────────────────────────────────────────────────────────────── */}
-      {hasThumb && (
-        <div
-          style={{
-            position:     "absolute",
-            bottom:       thumbActive ? 0       : "20px",
-            right:        thumbActive ? 0       : "20px",
-            // Width/height grow from 288×192 → 100%×100%
-            // Because bottom+right are the fixed anchors, expansion goes
-            // upward and leftward — i.e. from the bottom-right corner.
-            width:        thumbActive ? "100%"  : "288px",
-            height:       thumbActive ? "100%"  : "192px",
-            borderRadius: thumbActive ? "16px"  : "14px",
-            overflow:     "hidden",
-            transition:   [
-              "width 0.65s cubic-bezier(0.4,0,0.2,1)",
-              "height 0.65s cubic-bezier(0.4,0,0.2,1)",
-              "bottom 0.65s cubic-bezier(0.4,0,0.2,1)",
-              "right 0.65s cubic-bezier(0.4,0,0.2,1)",
-              "border-radius 0.65s cubic-bezier(0.4,0,0.2,1)",
-            ].join(", "),
-            border:    thumbActive ? "none" : "2px solid rgba(255,255,255,0.15)",
-            boxShadow: thumbActive ? "none" : "0 20px 60px rgba(0,0,0,0.5)",
-            zIndex:    10,
-          }}
-        >
+      {hasThumb && (() => {
+        const heroW = heroRef.current?.offsetWidth ?? 0;
+        const heroH = heroRef.current?.offsetHeight ?? 0;
+        const p = scrollProgress;
+        const thumbW   = heroW > 0 ? lerp(288, heroW, p) : (p > 0.01 ? "100%" : "288px");
+        const thumbH   = heroH > 0 ? lerp(192, heroH, p) : (p > 0.01 ? "100%" : "192px");
+        const thumbBot = lerp(20, 0, p);
+        const thumbRt  = lerp(20, 0, p);
+        const thumbBR  = lerp(14, 0, p);
+        const borderW  = lerp(2, 0, p);
+        const shadowOp = lerp(0.5, 0, p);
+        return (
+          <div
+            style={{
+              position:     "absolute",
+              bottom:       thumbBot,
+              right:        thumbRt,
+              width:        typeof thumbW === "number" ? `${thumbW}px` : thumbW,
+              height:       typeof thumbH === "number" ? `${thumbH}px` : thumbH,
+              borderRadius: `${thumbBR}px`,
+              overflow:     "hidden",
+              border:       `${borderW}px solid rgba(255,255,255,0.15)`,
+              boxShadow:    `0 20px 60px rgba(0,0,0,${shadowOp})`,
+              zIndex:       10,
+            }}
+          >
           {/* ── Direct video file: single <video> always in DOM ── */}
           {hasVideo && !isEmbed && (
             <video
@@ -331,7 +244,7 @@ export function HeroBanner(props: any) {
                 iframe in expanded state ── */}
           {hasVideo && isEmbed && (
             <>
-              {thumbActive ? (
+              {thumbExpanded ? (
                 (() => {
                   const ytId = getYouTubeId(videoUrl!);
                   const vmId = getVimeoId(videoUrl!);
@@ -352,26 +265,26 @@ export function HeroBanner(props: any) {
             <Image src={posterUrl} alt="Noa Plinke gameplay animation showreel thumbnail" fill className="object-cover" />
           )}
 
-          {/* "Scroll to expand" hint — only in idle state */}
-          {!thumbActive && (
+          {/* "Scroll to expand" hint — fades out as scroll progresses */}
+          {scrollProgress < 0.15 && (
             <div
               className="absolute bottom-0 left-0 right-0 py-2 text-center text-white/50 text-[10px] font-medium uppercase tracking-widest pointer-events-none"
-              style={{ background: "linear-gradient(to top, rgba(0,0,0,0.55), transparent)" }}
+              style={{ background: "linear-gradient(to top, rgba(0,0,0,0.55), transparent)", opacity: 1 - scrollProgress / 0.15 }}
             >
               Scroll to expand
             </div>
           )}
         </div>
-      )}
+        );
+      })()}
 
-      {/* z-4: Text content — fades to 0 during expansion */}
+      {/* z-4: Text content — fades out as thumbnail expands */}
       <div
         className="flex flex-col md:flex-row min-h-[75vh] relative"
         style={{
           zIndex:        4,
-          opacity:       thumbActive ? 0 : 1,
-          transition:    "opacity 0.4s ease",
-          pointerEvents: thumbActive ? "none" : "auto",
+          opacity:       Math.max(0, 1 - scrollProgress * 2.5),
+          pointerEvents: scrollProgress > 0.4 ? "none" : "auto",
         }}
       >
         {/* LEFT */}
@@ -406,7 +319,7 @@ export function HeroBanner(props: any) {
 
         {/* RIGHT: play badge anchor */}
         <div className="w-full md:w-[55%] relative min-h-[300px] md:min-h-[500px] flex items-end justify-end p-5">
-          {showPlayBadge && hasVideo && phase === "idle" && (
+          {showPlayBadge && hasVideo && scrollProgress < 0.05 && (
             <div
               className="absolute z-[15]"
               style={{ bottom: "calc(20px + 192px - 8px)", right: "calc(20px + 8px)" }}

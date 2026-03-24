@@ -47,7 +47,10 @@ export default defineType({
               description: 'e.g., "2024 — Present"' },
             { name: "role", title: "Role", type: "string" },
             { name: "company", title: "Company / Studio", type: "string" },
-            { name: "description", title: "Description", type: "text", rows: 2 },
+            { name: "description", title: "Short Description (homepage)", type: "text", rows: 2,
+              description: "Shown on the homepage timeline card." },
+            { name: "detailDescription", title: "Detail Description", type: "text", rows: 4,
+              description: "Longer description for a dedicated detail page. Falls back to short description if blank." },
           ],
           preview: {
             select: { title: "role", subtitle: "company" },
