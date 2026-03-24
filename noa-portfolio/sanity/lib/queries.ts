@@ -56,6 +56,7 @@ export const pageQuery = groq`
           thumbnail
         }
       },
+      _type == "contactBlock" => {
         ...,
         cvFile { asset-> { _id, url, originalFilename } }
       }
