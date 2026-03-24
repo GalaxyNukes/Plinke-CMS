@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { PortableText } from "@portabletext/react";
 import { urlFor } from "@/sanity/lib/image";
 import { ScrollReveal } from "../ui/ScrollReveal";
+import { ArrowUpRight } from "lucide-react";
 
 export function AboutTimeline(props: any) {
   const {
@@ -92,8 +94,9 @@ export function AboutTimeline(props: any) {
               </ScrollReveal>
 
               <div className="relative pl-7 border-l-2 border-gray-200">
-                {timeline.map((entry: any, i: number) => (
-                  <ScrollReveal key={i} delay={0.2 + i * 0.1}>
+                {timeline.map((entry: any, i: number) => {
+                  const hasSlug = !!entry.slug?.current;
+                  const inner = (
                     <div className={`relative ${i < timeline.length - 1 ? "mb-9" : ""}`}>
                       {/* Dot */}
                       <div
@@ -108,9 +111,14 @@ export function AboutTimeline(props: any) {
                       <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--accent-secondary)" }}>
                         {entry.period}
                       </span>
-                      <h4 className="font-display text-lg font-bold mt-1 mb-0.5" style={{ color: "var(--text-dark)" }}>
-                        {entry.role}
-                      </h4>
+                      <div className="flex items-center gap-2 mt-1 mb-0.5">
+                        <h4 className="font-display text-lg font-bold" style={{ color: "var(--text-dark)" }}>
+                          {entry.role}
+                        </h4>
+                        {hasSlug && (
+                          <ArrowUpRight size={15} style={{ color: "var(--text-muted)" }} className="shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
+                        )}
+                      </div>
                       <span className="text-sm font-semibold block mb-2" style={{ color: "var(--text-muted)" }}>
                         {entry.company}
                       </span>
@@ -120,8 +128,20 @@ export function AboutTimeline(props: any) {
                         </p>
                       )}
                     </div>
-                  </ScrollReveal>
-                ))}
+                  );
+                  return (
+                    <ScrollReveal key={i} delay={0.2 + i * 0.1}>
+                      {hasSlug ? (
+                        <Link
+                          href={`/experience/${entry.slug.current}`}
+                          className="group block hover:opacity-80 transition-opacity"
+                        >
+                          {inner}
+                        </Link>
+                      ) : inner}
+                    </ScrollReveal>
+                  );
+                })}
               </div>
             </>
           )}

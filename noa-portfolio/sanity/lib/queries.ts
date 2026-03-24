@@ -49,7 +49,13 @@ export const pageQuery = groq`
         ...,
         videoSource { ..., videoFile { asset-> { _id, url, mimeType } } }
       },
-      _type == "contactBlock" => {
+      _type == "aboutTimeline" => {
+        ...,
+        timeline[]{
+          ...,
+          thumbnail
+        }
+      },
         ...,
         cvFile { asset-> { _id, url, originalFilename } }
       }
@@ -136,4 +142,23 @@ export const allGameJamsQuery = groq`
 // Fetch all project groups (for portfolio filter dropdown)
 export const allProjectGroupsQuery = groq`
   *[_type == "projectGroup"] | order(name asc){ _id, name }
+`;
+
+// Fetch all timeline entries from homepage aboutTimeline block (for static generation)
+export const homepageTimelineEntriesQuery = groq`
+  *[_type == "page" && slug.current == "home"][0]{
+    "entries": blocks[_type == "aboutTimeline"][0].timeline[]{
+      slug,
+      period,
+      role,
+      company,
+      location,
+      thumbnail,
+      description,
+      detailDescription,
+      highlights,
+      software,
+      "_key": _key
+    }
+  }.entries
 `;

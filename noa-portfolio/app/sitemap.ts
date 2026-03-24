@@ -57,5 +57,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // CMS unavailable during build — skip dynamic routes
   }
 
-  return [...staticRoutes, ...projectRoutes, ...gameRoutes];
+  // Dynamic experience (timeline) routes
+  let experienceRoutes: MetadataRoute.Sitemap = [];
+  try {
+    if (client) {
+      const entries = await client.fetch(
+        groq`*[_type == "page" && slug.current == "home"][0]{
+          "entries": blocks[_type == "aboutTimeline"][0].timeline[defined(slug.current)]{
+            "slug": slug.current
+          }
+        }.entries`
+      );
+      if (entries) {
+        experienceRoutes = entries
+          .filter((e: any) => e?.slug)
+          .map((e: any) => ({
+            url: `${BASE_URL}/experience/${e.slug}`,
+            lastModified: new Date(),
+            changeFrequency: "yearly" as const,
+            priority: 0.6,
+          }));
+      }
+    }
+  } catch {
+    // CMS unavailable during build
+  }
+
+  return [...staticRoutes, ...projectRoutes, ...gameRoutes, ...experienceRoutes];
 }
