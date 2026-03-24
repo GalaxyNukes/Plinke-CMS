@@ -99,23 +99,113 @@ export function HeroBanner(props: any) {
     return () => clearTimeout(t);
   }, [hasVideo, isEmbed]);
 
-  // Continuous scroll-driven thumbnail expansion
+  // Scroll-lock helpers
+  const savedScrollY = useRef(0);
+  const isLocked = useRef(false);
+  function lockScroll() {
+    if (isLocked.current) return;
+    savedScrollY.current = window.scrollY;
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${savedScrollY.current}px`;
+    document.body.style.width = "100%";
+    isLocked.current = true;
+  }
+  function unlockScroll() {
+    if (!isLocked.current) return;
+    document.body.style.overflow = "";
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.width = "";
+    window.scrollTo(0, savedScrollY.current);
+    isLocked.current = false;
+  }
+
+  // How many px of scroll delta = full expansion
+  const EXPAND_PX = 420;
+  const accumulated = useRef(0);
+  const progressRef = useRef(0);
+  const unlockedRef = useRef(false);
+
+  // Continuous scroll-driven thumbnail: lock page while expanding, release at 95%
   useEffect(() => {
     if (!hasThumb) return;
+
+    function heroInView() {
+      if (!heroRef.current) return false;
+      const rect = heroRef.current.getBoundingClientRect();
+      return rect.top < window.innerHeight * 0.5 && rect.bottom > 0;
+    }
+
+    function applyDelta(delta: number) {
+      if (unlockedRef.current) return; // already released, ignore
+
+      // Lock on first downward movement while hero is visible
+      if (delta > 0 && heroInView()) lockScroll();
+
+      if (!isLocked.current) return;
+
+      accumulated.current = Math.max(0, Math.min(EXPAND_PX, accumulated.current + delta));
+      const p = accumulated.current / EXPAND_PX;
+      progressRef.current = p;
+      setScrollProgress(p);
+
+      // Release at 95% — let the page scroll freely from here
+      if (p >= 0.95) {
+        unlockedRef.current = true;
+        setScrollProgress(1);
+        progressRef.current = 1;
+        unlockScroll();
+      }
+    }
+
+    const onWheel = (e: WheelEvent) => {
+      if (unlockedRef.current) return;
+      if (!heroInView()) return;
+      e.preventDefault();
+      applyDelta(e.deltaY);
+    };
+
+    let touchStartY = 0;
+    const onTouchStart = (e: TouchEvent) => {
+      touchStartY = e.touches[0].clientY;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (unlockedRef.current) return;
+      if (!heroInView()) return;
+      const dy = touchStartY - e.touches[0].clientY;
+      if (Math.abs(dy) < 5) return;
+      e.preventDefault();
+      touchStartY = e.touches[0].clientY;
+      applyDelta(dy * 2); // touch needs a bit more sensitivity
+    };
+
+    // Reset when hero scrolls back into view at top
     const onScroll = () => {
       if (!heroRef.current) return;
       const rect = heroRef.current.getBoundingClientRect();
-      const heroH = heroRef.current.offsetHeight;
-      // scrolled = how many px we've scrolled past the top of the hero
-      const scrolled = -rect.top;
-      const threshold = heroH * 0.65;
-      const p = Math.max(0, Math.min(1, scrolled / threshold));
-      setScrollProgress(p);
+      // If hero top is back near viewport top, reset everything
+      if (rect.top > -20 && unlockedRef.current) {
+        unlockedRef.current = false;
+        accumulated.current = 0;
+        progressRef.current = 0;
+        setScrollProgress(0);
+      }
     };
+
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll(); // sync on mount
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [hasThumb]);
+
+    return () => {
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("scroll", onScroll);
+      unlockScroll(); // safety: release on unmount
+    };
+  }, [hasThumb]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const thumbActive = scrollProgress > 0.01;
   const thumbExpanded = scrollProgress > 0.99;
