@@ -24,11 +24,19 @@ export function PortfolioGrid(props: any) {
     projectGroups = [],
   } = props;
 
-  const categories = settings?.projectCategories || [
+  const allCategories = settings?.projectCategories || [
     "Procedural Animation",
     "Keyframe Animation",
     "Motion Capture",
   ];
+
+  // Only show categories that have at least one project using them
+  const usedCategories = allCategories.filter((cat: string) =>
+    projects.some((p: any) => p.categories?.includes(cat))
+  );
+
+  // Only show Demoreels pill if there are actual demoreels
+  const hasDemoreel = projects.some((p: any) => p.projectType === "Demoreel");
 
   const [active, setActive] = useState<FilterValue>("All");
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -100,13 +108,15 @@ export function PortfolioGrid(props: any) {
               All
             </button>
 
-            {/* Demoreels */}
-            <button
-              onClick={() => setActive("Demoreels")}
-              className={active === "Demoreels" ? pillActive : pillInactive}
-            >
-              Demoreels
-            </button>
+            {/* Demoreels — only shown if demoreels exist */}
+            {hasDemoreel && (
+              <button
+                onClick={() => setActive("Demoreels")}
+                className={active === "Demoreels" ? pillActive : pillInactive}
+              >
+                Demoreels
+              </button>
+            )}
 
             {/* Projects dropdown — only shows if there are project groups */}
             {projectGroups.length > 0 && (
@@ -171,8 +181,8 @@ export function PortfolioGrid(props: any) {
               </div>
             )}
 
-            {/* Category pills */}
-            {categories.map((cat: string) => (
+            {/* Category pills — only shown for categories with at least one project */}
+            {usedCategories.map((cat: string) => (
               <button
                 key={cat}
                 onClick={() => setActive({ type: "category", name: cat })}
