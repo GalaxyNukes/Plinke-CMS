@@ -123,7 +123,7 @@ export function AboutTimeline(props: any) {
                         {entry.company}
                       </span>
                       {entry.description && (
-                        <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                        <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)", whiteSpace: "pre-wrap" }}>
                           {entry.description}
                         </p>
                       )}

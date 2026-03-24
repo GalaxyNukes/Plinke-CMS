@@ -241,7 +241,7 @@ export function ProjectDetail({
 
           {(project.detailDescription || project.description) && (
             <ScrollReveal delay={0.2}>
-              <p className="text-white/50 text-lg leading-relaxed max-w-2xl mb-6">
+              <p className="text-white/50 text-lg leading-relaxed max-w-2xl mb-6" style={{ whiteSpace: "pre-wrap" }}>
                 {project.detailDescription || project.description}
               </p>
             </ScrollReveal>

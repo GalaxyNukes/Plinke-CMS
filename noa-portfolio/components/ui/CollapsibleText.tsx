@@ -23,14 +23,14 @@ export function CollapsibleText({
 
   if (!needsTruncation) {
     return (
-      <p className={className} style={style}>
+      <p className={className} style={{ whiteSpace: "pre-wrap", ...style }}>
         {text}
       </p>
     );
   }
 
   return (
-    <p className={className} style={style}>
+    <p className={className} style={{ whiteSpace: "pre-wrap", ...style }}>
       {expanded ? text : <>{preview}&hellip;</>}
       {" "}
       <button
