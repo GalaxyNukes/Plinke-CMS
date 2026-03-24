@@ -147,6 +147,8 @@ export function HeroBanner(props: any) {
         setScrollProgress(1);
         progressRef.current = 1;
         unlockScroll();
+        // Nudge the page so it starts scrolling past the hero immediately
+        window.scrollBy({ top: 2, behavior: "instant" });
       }
     }
 
@@ -171,12 +173,10 @@ export function HeroBanner(props: any) {
       applyDelta(dy * 2); // touch needs a bit more sensitivity
     };
 
-    // Reset when hero scrolls back into view at top
+    // Reset when user scrolls back to the very top of the page
     const onScroll = () => {
-      if (!heroRef.current) return;
-      const rect = heroRef.current.getBoundingClientRect();
-      // If hero top is back near viewport top, reset everything
-      if (rect.top > -20 && unlockedRef.current) {
+      if (!unlockedRef.current) return;
+      if (window.scrollY < 10) {
         unlockedRef.current = false;
         accumulated.current = 0;
         progressRef.current = 0;
