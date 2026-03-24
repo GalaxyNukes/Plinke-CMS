@@ -100,24 +100,15 @@ export function HeroBanner(props: any) {
   }, [hasVideo, isEmbed]);
 
   // Scroll-lock helpers
-  const savedScrollY = useRef(0);
   const isLocked = useRef(false);
   function lockScroll() {
     if (isLocked.current) return;
-    savedScrollY.current = window.scrollY;
     document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${savedScrollY.current}px`;
-    document.body.style.width = "100%";
     isLocked.current = true;
   }
   function unlockScroll() {
     if (!isLocked.current) return;
     document.body.style.overflow = "";
-    document.body.style.position = "";
-    document.body.style.top = "";
-    document.body.style.width = "";
-    window.scrollTo(0, savedScrollY.current);
     isLocked.current = false;
   }
 
