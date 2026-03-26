@@ -40,14 +40,17 @@ export default async function GamePage({ params }: { params: { slug: string } })
 
   if (!jam) return notFound();
 
-  // Build ordered list.
+  // Prefer homepage gameJamsGrid order, but fall back if current jam not in it.
+  const homepageContainsCurrent = (homepageOrder ?? []).some(
+    (j: any) => j._id === jam._id
+  );
   const allOrdered: any[] =
-    homepageOrder && homepageOrder.length > 0 ? homepageOrder : fallbackOrder;
+    homepageContainsCurrent ? homepageOrder : fallbackOrder;
 
-  // Find current jam by _id (reliable even when slug not yet set in CMS).
+  // Find current jam by _id.
   const currentIndex = allOrdered.findIndex((j: any) => j._id === jam._id);
 
-  // Walk to nearest item with a navigable slug.
+  // Walk to nearest adjacent item with a navigable slug.
   const prevJam = (() => {
     for (let i = currentIndex - 1; i >= 0; i--) {
       if (allOrdered[i].slug?.current) return allOrdered[i];

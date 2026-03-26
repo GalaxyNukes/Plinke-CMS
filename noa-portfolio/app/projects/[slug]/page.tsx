@@ -40,15 +40,21 @@ export default async function ProjectPage({ params }: { params: { slug: string }
 
   if (!project) return notFound();
 
-  // Build ordered list, exclude demoreels from navigation.
-  const allOrdered: any[] =
-    (homepageOrder && homepageOrder.length > 0 ? homepageOrder : fallbackOrder)
-      .filter((p: any) => p.projectType !== "Demoreel");
+  // Build complete ordered list for navigation.
+  // Prefer homepage portfolioGrid order, but only if the current project is
+  // actually in that list — otherwise fall back to full allProjectSlugsQuery.
+  // Always exclude demoreels.
+  const homepageContainsCurrent = (homepageOrder ?? []).some(
+    (p: any) => p._id === project._id
+  );
+  const allOrdered: any[] = (
+    homepageContainsCurrent ? homepageOrder : fallbackOrder
+  ).filter((p: any) => p.projectType !== "Demoreel");
 
-  // Find current project by _id (reliable even when slug not yet set in CMS).
+  // Find current project by _id.
   const currentIndex = allOrdered.findIndex((p: any) => p._id === project._id);
 
-  // Walk backwards/forwards to find the nearest item that has a navigable slug.
+  // Walk to nearest adjacent item that has a navigable slug.
   const prevProject = (() => {
     for (let i = currentIndex - 1; i >= 0; i--) {
       if (allOrdered[i].slug?.current) return allOrdered[i];
