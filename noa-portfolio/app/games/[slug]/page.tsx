@@ -69,7 +69,7 @@ export default async function GamePage({ params }: { params: { slug: string } })
         prevJam={prevJam}
         nextJam={nextJam}
         currentIndex={currentIndex}
-        totalJams={orderedJams.length}
+        totalJams={allOrdered.length}
       />
     </main>
   );
