@@ -47,9 +47,11 @@ export default async function ProjectPage({ params }: { params: { slug: string }
   const homepageContainsCurrent = (homepageOrder ?? []).some(
     (p: any) => p._id === project._id
   );
+  // Use full list if current project is a demoreel, otherwise exclude demoreels.
+  const isDemoreel = project.projectType === "Demoreel";
   const allOrdered: any[] = (
     homepageContainsCurrent ? homepageOrder : fallbackOrder
-  ).filter((p: any) => p.projectType !== "Demoreel");
+  ).filter((p: any) => isDemoreel ? p.projectType === "Demoreel" : p.projectType !== "Demoreel");
 
   // Find current project by _id.
   const currentIndex = allOrdered.findIndex((p: any) => p._id === project._id);
