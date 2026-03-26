@@ -40,9 +40,11 @@ export default async function ProjectPage({ params }: { params: { slug: string }
 
   if (!project) return notFound();
 
-  // Use homepage portfolioGrid order; fall back to year-desc if not set up yet
-  const orderedProjects: any[] =
-    homepageOrder && homepageOrder.length > 0 ? homepageOrder : fallbackOrder;
+  // Use homepage portfolioGrid order; fall back to year-desc if not set up yet.
+  // Always exclude demoreels — they should not appear in project prev/next navigation.
+  const orderedProjects: any[] = (
+    homepageOrder && homepageOrder.length > 0 ? homepageOrder : fallbackOrder
+  ).filter((p: any) => p.projectType !== "Demoreel");
 
   const currentIndex = orderedProjects.findIndex(
     (p: any) => p.slug?.current === params.slug
