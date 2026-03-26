@@ -46,11 +46,11 @@ export default async function ProjectPage({ params }: { params: { slug: string }
 
   // Only navigate between real projects — skip demoreels in prev/next.
   const navigable = allOrdered.filter(
-    (p: any) => p.projectType !== "Demoreel" && p.slug?.current
+    (p: any) => p.projectType !== "Demoreel"
   );
 
   const currentIndex = navigable.findIndex(
-    (p: any) => p.slug?.current === params.slug
+    (p: any) => p.slug?.current === params.slug || p._id === project._id
   );
   const prevProject = currentIndex > 0 ? navigable[currentIndex - 1] : null;
   const nextProject =
