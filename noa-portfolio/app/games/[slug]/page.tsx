@@ -40,16 +40,26 @@ export default async function GamePage({ params }: { params: { slug: string } })
 
   if (!jam) return notFound();
 
-  // Use homepage gameJamsGrid order; fall back to date-desc
-  const orderedJams: any[] =
+  // Build ordered list.
+  const allOrdered: any[] =
     homepageOrder && homepageOrder.length > 0 ? homepageOrder : fallbackOrder;
 
-  const currentIndex = orderedJams.findIndex(
-    (j: any) => j.slug?.current === params.slug
-  );
-  const prevJam = currentIndex > 0 ? orderedJams[currentIndex - 1] : null;
-  const nextJam =
-    currentIndex < orderedJams.length - 1 ? orderedJams[currentIndex + 1] : null;
+  // Find current jam by _id (reliable even when slug not yet set in CMS).
+  const currentIndex = allOrdered.findIndex((j: any) => j._id === jam._id);
+
+  // Walk to nearest item with a navigable slug.
+  const prevJam = (() => {
+    for (let i = currentIndex - 1; i >= 0; i--) {
+      if (allOrdered[i].slug?.current) return allOrdered[i];
+    }
+    return null;
+  })();
+  const nextJam = (() => {
+    for (let i = currentIndex + 1; i < allOrdered.length; i++) {
+      if (allOrdered[i].slug?.current) return allOrdered[i];
+    }
+    return null;
+  })();
 
   return (
     <main className="max-w-[1320px] mx-auto p-5">

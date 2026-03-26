@@ -40,21 +40,27 @@ export default async function ProjectPage({ params }: { params: { slug: string }
 
   if (!project) return notFound();
 
-  // Use homepage portfolioGrid order; fall back to year-desc if not set up yet.
+  // Build ordered list, exclude demoreels from navigation.
   const allOrdered: any[] =
-    homepageOrder && homepageOrder.length > 0 ? homepageOrder : fallbackOrder;
+    (homepageOrder && homepageOrder.length > 0 ? homepageOrder : fallbackOrder)
+      .filter((p: any) => p.projectType !== "Demoreel");
 
-  // Only navigate between real projects — skip demoreels in prev/next.
-  const navigable = allOrdered.filter(
-    (p: any) => p.projectType !== "Demoreel"
-  );
+  // Find current project by _id (reliable even when slug not yet set in CMS).
+  const currentIndex = allOrdered.findIndex((p: any) => p._id === project._id);
 
-  const currentIndex = navigable.findIndex(
-    (p: any) => p.slug?.current === params.slug || p._id === project._id
-  );
-  const prevProject = currentIndex > 0 ? navigable[currentIndex - 1] : null;
-  const nextProject =
-    currentIndex < navigable.length - 1 ? navigable[currentIndex + 1] : null;
+  // Walk backwards/forwards to find the nearest item that has a navigable slug.
+  const prevProject = (() => {
+    for (let i = currentIndex - 1; i >= 0; i--) {
+      if (allOrdered[i].slug?.current) return allOrdered[i];
+    }
+    return null;
+  })();
+  const nextProject = (() => {
+    for (let i = currentIndex + 1; i < allOrdered.length; i++) {
+      if (allOrdered[i].slug?.current) return allOrdered[i];
+    }
+    return null;
+  })();
 
   return (
     <main className="max-w-[1320px] mx-auto p-5">
