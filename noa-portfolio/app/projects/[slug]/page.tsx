@@ -70,7 +70,7 @@ export default async function ProjectPage({ params }: { params: { slug: string }
         prevProject={prevProject}
         nextProject={nextProject}
         currentIndex={currentIndex}
-        totalProjects={navigable.length}
+        totalProjects={allOrdered.length}
       />
     </main>
   );
