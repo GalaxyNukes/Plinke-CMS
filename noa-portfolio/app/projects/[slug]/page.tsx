@@ -41,17 +41,20 @@ export default async function ProjectPage({ params }: { params: { slug: string }
   if (!project) return notFound();
 
   // Use homepage portfolioGrid order; fall back to year-desc if not set up yet.
-  // Always exclude demoreels — they should not appear in project prev/next navigation.
-  const orderedProjects: any[] = (
-    homepageOrder && homepageOrder.length > 0 ? homepageOrder : fallbackOrder
-  ).filter((p: any) => p.projectType !== "Demoreel");
+  const allOrdered: any[] =
+    homepageOrder && homepageOrder.length > 0 ? homepageOrder : fallbackOrder;
 
-  const currentIndex = orderedProjects.findIndex(
+  // Only navigate between real projects — skip demoreels in prev/next.
+  const navigable = allOrdered.filter(
+    (p: any) => p.projectType !== "Demoreel" && p.slug?.current
+  );
+
+  const currentIndex = navigable.findIndex(
     (p: any) => p.slug?.current === params.slug
   );
-  const prevProject = currentIndex > 0 ? orderedProjects[currentIndex - 1] : null;
+  const prevProject = currentIndex > 0 ? navigable[currentIndex - 1] : null;
   const nextProject =
-    currentIndex < orderedProjects.length - 1 ? orderedProjects[currentIndex + 1] : null;
+    currentIndex < navigable.length - 1 ? navigable[currentIndex + 1] : null;
 
   return (
     <main className="max-w-[1320px] mx-auto p-5">
@@ -61,7 +64,7 @@ export default async function ProjectPage({ params }: { params: { slug: string }
         prevProject={prevProject}
         nextProject={nextProject}
         currentIndex={currentIndex}
-        totalProjects={orderedProjects.length}
+        totalProjects={navigable.length}
       />
     </main>
   );

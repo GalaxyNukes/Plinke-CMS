@@ -94,8 +94,8 @@ export const projectBySlugQuery = groq`
 
 // Fetch all project slugs in fallback order (year desc) — used only if homepage order unavailable
 export const allProjectSlugsQuery = groq`
-  *[_type == "project" && projectType != "Demoreel"] | order(year desc, title asc){
-    _id, title, slug, thumbnail
+  *[_type == "project"] | order(year desc, title asc){
+    _id, title, slug, thumbnail, projectType
   }
 `;
 
