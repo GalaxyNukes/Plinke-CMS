@@ -1,4 +1,5 @@
 import { defineType, defineField } from "sanity";
+import { DisplayFontSelector, BodyFontSelector } from "../../components/FontSelector";
 
 export default defineType({
   name: "siteSettings",
@@ -10,6 +11,7 @@ export default defineType({
     { name: "identity", title: "👤  Identity", default: true },
     { name: "navigation", title: "🔗  Navigation" },
     { name: "theme", title: "🎨  Theme & Colours" },
+    { name: "typography", title: "✏️  Typography" },
     { name: "footer", title: "📄  Footer" },
   ],
   fields: [

@@ -8,8 +8,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        display: ["Syne", "sans-serif"],
-        body: ["DM Sans", "sans-serif"],
+        display: ["var(--font-display,Syne)", "sans-serif"],
+        body: ["var(--font-body,'DM Sans')", "sans-serif"],
       },
       colors: {
         dark: "var(--bg-dark)",

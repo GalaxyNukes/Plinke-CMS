@@ -68,7 +68,8 @@ export const pageQuery = groq`
 export const siteSettingsQuery = groq`
   *[_type == "siteSettings"][0]{
     siteName, logo, ogImage{ asset->{ url } }, tagline, siteDescription,
-    email, socialLinks, navLinks, theme, footerText, copyright, projectCategories
+    email, socialLinks, navLinks, theme, footerText, copyright, projectCategories,
+    displayFont, bodyFont
   }
 `;
 

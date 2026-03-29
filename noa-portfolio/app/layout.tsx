@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { client } from "@/sanity/sanity.client";
+import { buildGoogleFontsUrl, DISPLAY_FONTS, BODY_FONTS } from "@/sanity/lib/fontData";
 import { siteSettingsQuery } from "@/sanity/lib/queries";
 import "./globals.css";
 
@@ -119,11 +120,24 @@ const websiteJsonLd = {
   },
 };
 
+/** Sanitise a font family name — only allow letters, numbers, spaces */
+function safeFontFamily(value: unknown): string | null {
+  if (typeof value !== "string" || !value.trim()) return null;
+  if (/^[a-zA-Z0-9 ]+$/.test(value.trim())) return value.trim();
+  return null;
+}
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   let themeStyle = "";
+  let displayFontFamily = "Syne";
+  let bodyFontFamily = "DM Sans";
+  let fontsUrl = "https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap";
+
   try {
     if (!client) throw new Error("CMS not connected");
     const settings = await client.fetch(siteSettingsQuery);
+
+    // Theme colours
     if (settings?.theme) {
       const t = settings.theme;
       const vars: string[] = [];
@@ -137,17 +151,36 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       if (accentSecondary) vars.push(`--accent-secondary: ${accentSecondary};`);
       if (vars.length) themeStyle = `:root { ${vars.join(" ")} }`;
     }
+
+    // Typography
+    const rawDisplay = safeFontFamily(settings?.displayFont?.family);
+    const rawBody    = safeFontFamily(settings?.bodyFont?.family);
+    if (rawDisplay) displayFontFamily = rawDisplay;
+    if (rawBody)    bodyFontFamily    = rawBody;
+
+    const displayInfo = DISPLAY_FONTS.find(f => f.value === displayFontFamily);
+    const bodyInfo    = BODY_FONTS.find(f => f.value === bodyFontFamily);
+    fontsUrl = buildGoogleFontsUrl([
+      { family: displayFontFamily, weights: displayInfo?.weights ?? [400, 600, 700, 800] },
+      { family: bodyFontFamily,    weights: bodyInfo?.weights    ?? [300, 400, 500, 600, 700] },
+    ]);
   } catch (e) {
-    // CMS not connected yet — defaults from globals.css are used
+    // CMS not connected yet — defaults used
   }
+
+  // Merge font CSS variables into :root style
+  const fontVars = `--font-display: '${displayFontFamily}'; --font-body: '${bodyFontFamily}';`;
+  const rootStyle = themeStyle
+    ? themeStyle.replace(":root {", `:root { ${fontVars}`)
+    : `:root { ${fontVars} }`;
 
   return (
     <html lang="en">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
-        {themeStyle && <style dangerouslySetInnerHTML={{ __html: themeStyle }} />}
+        <link href={fontsUrl} rel="stylesheet" />
+        <style dangerouslySetInnerHTML={{ __html: rootStyle }} />
         {/* JSON-LD structured data */}
         <script
           type="application/ld+json"
