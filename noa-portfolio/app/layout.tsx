@@ -153,49 +153,55 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       if (vars.length) themeStyle = `:root { ${vars.join(" ")} }`;
     }
 
-    // Typography — handle Google Fonts and custom uploaded fonts
+    // Typography — handle Google Fonts, bundled fonts, and custom uploaded fonts
     const df = settings?.displayFont;
     const bf = settings?.bodyFont;
 
     const googleFontsNeeded: { family: string; weights: number[] }[] = [];
 
-    // Display font
-    if (df?.family === "__custom__") {
-      const name = safeFontFamily(df?.customName);
-      const url  = df?.customFile?.asset?.url;
-      if (name && url) {
-        displayFontFamily = name;
-        // Detect format from URL extension
-        const ext = url.split("?")[0].split(".").pop()?.toLowerCase();
-        const fmt = ext === "woff2" ? "woff2" : ext === "woff" ? "woff" : ext === "ttf" ? "truetype" : "opentype";
-        customFontFaces += `@font-face { font-family: '${name}'; src: url('${url}') format('${fmt}'); font-weight: 100 900; font-display: swap; }\n`;
+    // Bundled fonts served from /public/fonts
+    const BUNDLED_FONTS: Record<string, { name: string; file: string; format: string }> = {
+      "__bundled__froople":  { name: "Froople",         file: "/fonts/Froople.ttf",        format: "truetype" },
+      "__bundled__nority":   { name: "Nority Display",  file: "/fonts/Nority-Display.otf", format: "opentype" },
+      "__bundled__roketto":  { name: "Roketto",          file: "/fonts/Roketto.ttf",         format: "truetype" },
+    };
+
+    function resolveFontSlot(slot: any, defaultFamily: string, fonts: typeof DISPLAY_FONTS) {
+      const family: string = slot?.family || defaultFamily;
+
+      if (BUNDLED_FONTS[family]) {
+        const b = BUNDLED_FONTS[family];
+        customFontFaces += `@font-face { font-family: '${b.name}'; src: url('${b.file}') format('${b.format}'); font-weight: 100 900; font-display: swap; }\n`;
+        return b.name;
       }
-    } else {
-      const raw = safeFontFamily(df?.family);
-      if (raw && raw !== "__sep__") displayFontFamily = raw;
-      const info = DISPLAY_FONTS.find(f => f.value === displayFontFamily);
-      googleFontsNeeded.push({ family: displayFontFamily, weights: info?.weights ?? [400, 600, 700, 800] });
+      if (family === "__custom__") {
+        const name = safeFontFamily(slot?.customName);
+        const url  = slot?.customFile?.asset?.url;
+        if (name && url) {
+          const ext = url.split("?")[0].split(".").pop()?.toLowerCase();
+          const fmt = ext === "woff2" ? "woff2" : ext === "woff" ? "woff" : ext === "ttf" ? "truetype" : "opentype";
+          customFontFaces += `@font-face { font-family: '${name}'; src: url('${url}') format('${fmt}'); font-weight: 100 900; font-display: swap; }\n`;
+          return name;
+        }
+        return defaultFamily;
+      }
+      if (family === "__sep__" || family === "__sep2__") return defaultFamily;
+      const raw = safeFontFamily(family);
+      if (raw) {
+        const info = fonts.find(f => f.value === raw);
+        googleFontsNeeded.push({ family: raw, weights: info?.weights ?? [400, 600, 700, 800] });
+        return raw;
+      }
+      return defaultFamily;
     }
 
-    // Body font
-    if (bf?.family === "__custom__") {
-      const name = safeFontFamily(bf?.customName);
-      const url  = bf?.customFile?.asset?.url;
-      if (name && url) {
-        bodyFontFamily = name;
-        const ext = url.split("?")[0].split(".").pop()?.toLowerCase();
-        const fmt = ext === "woff2" ? "woff2" : ext === "woff" ? "woff" : ext === "ttf" ? "truetype" : "opentype";
-        customFontFaces += `@font-face { font-family: '${name}'; src: url('${url}') format('${fmt}'); font-weight: 100 900; font-display: swap; }\n`;
-      }
-    } else {
-      const raw = safeFontFamily(bf?.family);
-      if (raw && raw !== "__sep__") bodyFontFamily = raw;
-      const info = BODY_FONTS.find(f => f.value === bodyFontFamily);
-      googleFontsNeeded.push({ family: bodyFontFamily, weights: info?.weights ?? [300, 400, 500, 600, 700] });
-    }
+    displayFontFamily = resolveFontSlot(df, "Syne", DISPLAY_FONTS);
+    bodyFontFamily    = resolveFontSlot(bf, "DM Sans", BODY_FONTS);
 
     if (googleFontsNeeded.length > 0) {
       fontsUrl = buildGoogleFontsUrl(googleFontsNeeded);
+    } else {
+      fontsUrl = ""; // all fonts are local, no Google Fonts needed
     }
   } catch (e) {
     // CMS not connected yet — defaults used
@@ -210,9 +216,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href={fontsUrl} rel="stylesheet" />
+        {fontsUrl && <link rel="preconnect" href="https://fonts.googleapis.com" />}
+        {fontsUrl && <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />}
+        {fontsUrl && <link href={fontsUrl} rel="stylesheet" />}
         <style dangerouslySetInnerHTML={{ __html: fullStyle }} />
         {/* JSON-LD structured data */}
         <script

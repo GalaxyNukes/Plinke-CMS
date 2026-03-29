@@ -17,16 +17,22 @@ export function FontPreview() {
   const displayFont = useFormValue(["displayFont"]) as any;
   const bodyFont    = useFormValue(["bodyFont"])    as any;
 
-  const rawDisplayFamily = displayFont?.family || "Syne";
-  const rawBodyFamily    = bodyFont?.family    || "DM Sans";
+  const BUNDLED: Record<string, string> = {
+    "__bundled__froople": "Froople",
+    "__bundled__nority":  "Nority Display",
+    "__bundled__roketto": "Roketto",
+  };
 
-  // Use custom font name when __custom__ is selected
-  const displayFamily = rawDisplayFamily === "__custom__"
-    ? (displayFont?.customName || "Custom Font")
-    : (rawDisplayFamily === "__sep__" ? "Syne" : rawDisplayFamily);
-  const bodyFamily = rawBodyFamily === "__custom__"
-    ? (bodyFont?.customName || "Custom Font")
-    : (rawBodyFamily === "__sep__" ? "DM Sans" : rawBodyFamily);
+  function resolveFamily(font: any, fallback: string) {
+    const f = font?.family || fallback;
+    if (BUNDLED[f]) return BUNDLED[f];
+    if (f === "__custom__") return font?.customName || "Custom Font";
+    if (f.startsWith("__")) return fallback;
+    return f;
+  }
+
+  const displayFamily = resolveFamily(displayFont, "Syne");
+  const bodyFamily    = resolveFamily(bodyFont, "DM Sans");
 
   const displayWeight = displayFont?.weight || "700";
   const bodyWeight    = bodyFont?.weight    || "400";
