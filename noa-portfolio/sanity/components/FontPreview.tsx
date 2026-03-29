@@ -18,9 +18,14 @@ export function FontPreview() {
   const bodyFont    = useFormValue(["bodyFont"])    as any;
 
   const BUNDLED: Record<string, string> = {
-    "__bundled__froople": "Froople",
-    "__bundled__nority":  "Nority Display",
-    "__bundled__roketto": "Roketto",
+    "__bundled__broyek":   "Broyek",
+    "__bundled__froople":  "Froople",
+    "__bundled__juancock": "Juan Cock",
+    "__bundled__juturu":   "Juturu",
+    "__bundled__mocha":    "Mocha",
+    "__bundled__nority":   "Nority Display",
+    "__bundled__roketto":  "Roketto",
+    "__bundled__shoutback":"ShoutBack",
   };
 
   function resolveFamily(font: any, fallback: string) {

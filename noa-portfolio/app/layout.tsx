@@ -161,9 +161,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
     // Bundled fonts served from /public/fonts
     const BUNDLED_FONTS: Record<string, { name: string; file: string; format: string }> = {
-      "__bundled__froople":  { name: "Froople",         file: "/fonts/Froople.ttf",        format: "truetype" },
-      "__bundled__nority":   { name: "Nority Display",  file: "/fonts/Nority-Display.otf", format: "opentype" },
-      "__bundled__roketto":  { name: "Roketto",          file: "/fonts/Roketto.ttf",         format: "truetype" },
+      "__bundled__broyek":   { name: "Broyek",          file: "/fonts/Broyek-Regular.ttf",   format: "truetype" },
+      "__bundled__froople":  { name: "Froople",          file: "/fonts/Froople.ttf",          format: "truetype" },
+      "__bundled__juancock": { name: "Juan Cock",        file: "/fonts/JuanCock.otf",         format: "opentype" },
+      "__bundled__juturu":   { name: "Juturu",           file: "/fonts/Juturu-VariableVF.ttf",format: "truetype" },
+      "__bundled__mocha":    { name: "Mocha",            file: "/fonts/Mocha.otf",            format: "opentype" },
+      "__bundled__nority":   { name: "Nority Display",  file: "/fonts/Nority-Display.otf",   format: "opentype" },
+      "__bundled__roketto":  { name: "Roketto",          file: "/fonts/Roketto.ttf",          format: "truetype" },
+      "__bundled__shoutback":{ name: "ShoutBack",        file: "/fonts/ShoutBack-Regular.otf",format: "opentype" },
     };
 
     function resolveFontSlot(slot: any, defaultFamily: string, fonts: typeof DISPLAY_FONTS) {
