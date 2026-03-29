@@ -17,9 +17,18 @@ export function FontPreview() {
   const displayFont = useFormValue(["displayFont"]) as any;
   const bodyFont    = useFormValue(["bodyFont"])    as any;
 
-  const displayFamily = displayFont?.family || "Syne";
+  const rawDisplayFamily = displayFont?.family || "Syne";
+  const rawBodyFamily    = bodyFont?.family    || "DM Sans";
+
+  // Use custom font name when __custom__ is selected
+  const displayFamily = rawDisplayFamily === "__custom__"
+    ? (displayFont?.customName || "Custom Font")
+    : (rawDisplayFamily === "__sep__" ? "Syne" : rawDisplayFamily);
+  const bodyFamily = rawBodyFamily === "__custom__"
+    ? (bodyFont?.customName || "Custom Font")
+    : (rawBodyFamily === "__sep__" ? "DM Sans" : rawBodyFamily);
+
   const displayWeight = displayFont?.weight || "700";
-  const bodyFamily    = bodyFont?.family    || "DM Sans";
   const bodyWeight    = bodyFont?.weight    || "400";
 
   useEffect(() => { loadGoogleFont(displayFamily); }, [displayFamily]);

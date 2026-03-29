@@ -132,6 +132,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let displayFontFamily = "Syne";
   let bodyFontFamily = "DM Sans";
   let fontsUrl = "https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap";
+  let customFontFaces = ""; // @font-face rules for uploaded fonts
 
   try {
     if (!client) throw new Error("CMS not connected");
@@ -152,18 +153,50 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       if (vars.length) themeStyle = `:root { ${vars.join(" ")} }`;
     }
 
-    // Typography
-    const rawDisplay = safeFontFamily(settings?.displayFont?.family);
-    const rawBody    = safeFontFamily(settings?.bodyFont?.family);
-    if (rawDisplay) displayFontFamily = rawDisplay;
-    if (rawBody)    bodyFontFamily    = rawBody;
+    // Typography — handle Google Fonts and custom uploaded fonts
+    const df = settings?.displayFont;
+    const bf = settings?.bodyFont;
 
-    const displayInfo = DISPLAY_FONTS.find(f => f.value === displayFontFamily);
-    const bodyInfo    = BODY_FONTS.find(f => f.value === bodyFontFamily);
-    fontsUrl = buildGoogleFontsUrl([
-      { family: displayFontFamily, weights: displayInfo?.weights ?? [400, 600, 700, 800] },
-      { family: bodyFontFamily,    weights: bodyInfo?.weights    ?? [300, 400, 500, 600, 700] },
-    ]);
+    const googleFontsNeeded: { family: string; weights: number[] }[] = [];
+
+    // Display font
+    if (df?.family === "__custom__") {
+      const name = safeFontFamily(df?.customName);
+      const url  = df?.customFile?.asset?.url;
+      if (name && url) {
+        displayFontFamily = name;
+        // Detect format from URL extension
+        const ext = url.split("?")[0].split(".").pop()?.toLowerCase();
+        const fmt = ext === "woff2" ? "woff2" : ext === "woff" ? "woff" : ext === "ttf" ? "truetype" : "opentype";
+        customFontFaces += `@font-face { font-family: '${name}'; src: url('${url}') format('${fmt}'); font-weight: 100 900; font-display: swap; }\n`;
+      }
+    } else {
+      const raw = safeFontFamily(df?.family);
+      if (raw && raw !== "__sep__") displayFontFamily = raw;
+      const info = DISPLAY_FONTS.find(f => f.value === displayFontFamily);
+      googleFontsNeeded.push({ family: displayFontFamily, weights: info?.weights ?? [400, 600, 700, 800] });
+    }
+
+    // Body font
+    if (bf?.family === "__custom__") {
+      const name = safeFontFamily(bf?.customName);
+      const url  = bf?.customFile?.asset?.url;
+      if (name && url) {
+        bodyFontFamily = name;
+        const ext = url.split("?")[0].split(".").pop()?.toLowerCase();
+        const fmt = ext === "woff2" ? "woff2" : ext === "woff" ? "woff" : ext === "ttf" ? "truetype" : "opentype";
+        customFontFaces += `@font-face { font-family: '${name}'; src: url('${url}') format('${fmt}'); font-weight: 100 900; font-display: swap; }\n`;
+      }
+    } else {
+      const raw = safeFontFamily(bf?.family);
+      if (raw && raw !== "__sep__") bodyFontFamily = raw;
+      const info = BODY_FONTS.find(f => f.value === bodyFontFamily);
+      googleFontsNeeded.push({ family: bodyFontFamily, weights: info?.weights ?? [300, 400, 500, 600, 700] });
+    }
+
+    if (googleFontsNeeded.length > 0) {
+      fontsUrl = buildGoogleFontsUrl(googleFontsNeeded);
+    }
   } catch (e) {
     // CMS not connected yet — defaults used
   }
@@ -173,14 +206,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const rootStyle = themeStyle
     ? themeStyle.replace(":root {", `:root { ${fontVars}`)
     : `:root { ${fontVars} }`;
-
+  const fullStyle = customFontFaces + rootStyle;
   return (
     <html lang="en">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href={fontsUrl} rel="stylesheet" />
-        <style dangerouslySetInnerHTML={{ __html: rootStyle }} />
+        <style dangerouslySetInnerHTML={{ __html: fullStyle }} />
         {/* JSON-LD structured data */}
         <script
           type="application/ld+json"
