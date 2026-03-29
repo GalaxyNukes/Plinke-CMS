@@ -350,6 +350,43 @@ export default defineType({
       ],
     }),
 
+    // ── Navbar Appearance ────────────────────────────────────
+    defineField({
+      name: "showLogoIcon",
+      title: "Show Logo Icon",
+      type: "boolean",
+      group: "navigation",
+      initialValue: true,
+      description: "Show the coloured icon box next to the site name in the navbar.",
+    }),
+    defineField({
+      name: "showLogoTitle",
+      title: "Show Logo Title",
+      type: "boolean",
+      group: "navigation",
+      initialValue: true,
+      description: "Show the site name text in the navbar.",
+    }),
+    defineField({
+      name: "logoTitleSize",
+      title: "Logo Title Size",
+      type: "string",
+      group: "navigation",
+      initialValue: "base",
+      description: "Font size of the site name in the navbar.",
+      options: {
+        list: [
+          { title: "XS — Extra Small", value: "xs" },
+          { title: "SM — Small", value: "sm" },
+          { title: "Base — Default", value: "base" },
+          { title: "LG — Large", value: "lg" },
+          { title: "XL — Extra Large", value: "xl" },
+          { title: "2XL — 2x Large", value: "2xl" },
+        ],
+        layout: "dropdown",
+      },
+    }),
+
     // ── Footer ────────────────────────────────────────────────────
     defineField({
       name: "footerText",

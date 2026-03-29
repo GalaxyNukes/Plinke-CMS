@@ -30,6 +30,18 @@ export function Navbar({ settings }: NavbarProps) {
   ];
   const email = settings?.email || "hello@noaplinke.com";
   const siteName = settings?.siteName || "Noa Plinke";
+  const showLogoIcon  = settings?.showLogoIcon  ?? true;
+  const showLogoTitle = settings?.showLogoTitle ?? true;
+  const logoTitleSize = settings?.logoTitleSize || "base";
+
+  const titleSizeClass: Record<string, string> = {
+    xs:   "text-xs",
+    sm:   "text-sm",
+    base: "text-base",
+    lg:   "text-lg",
+    xl:   "text-xl",
+    "2xl":"text-2xl",
+  };
 
   // On non-home pages, anchor links become /#section so the browser
   // navigates to the homepage and then scrolls to the right section.
@@ -51,15 +63,19 @@ export function Navbar({ settings }: NavbarProps) {
       >
         {/* Logo — always navigates to homepage */}
         <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center font-display font-extrabold text-sm"
-            style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-secondary))", color: "var(--bg-dark)" }}
-          >
-            {siteName.charAt(0)}
-          </div>
-          <span className="font-display font-bold text-white text-base tracking-tight">
-            {siteName.toUpperCase()}
-          </span>
+          {showLogoIcon && (
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center font-display font-extrabold text-sm shrink-0"
+              style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-secondary))", color: "var(--bg-dark)" }}
+            >
+              {siteName.charAt(0)}
+            </div>
+          )}
+          {showLogoTitle && (
+            <span className={`font-display font-bold text-white tracking-tight ${titleSizeClass[logoTitleSize] ?? "text-base"}`}>
+              {siteName.toUpperCase()}
+            </span>
+          )}
         </Link>
 
         {/* Desktop nav */}
