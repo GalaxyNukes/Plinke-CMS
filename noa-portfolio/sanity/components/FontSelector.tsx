@@ -1,8 +1,6 @@
-"use client";
-
 import { useEffect, useCallback } from "react";
 import { set, ObjectInputProps } from "sanity";
-import { Card, Stack, Select, Text, Flex, Box, Label } from "@sanity/ui";
+import { Card, Stack, Select, Text, Box, Label } from "@sanity/ui";
 import { DISPLAY_FONTS, BODY_FONTS, buildGoogleFontsUrl, FontOption } from "../lib/fontData";
 
 function loadGoogleFont(family: string, weights: number[]) {
