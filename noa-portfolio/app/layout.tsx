@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { client } from "@/sanity/sanity.client";
 import { buildGoogleFontsUrl, DISPLAY_FONTS, BODY_FONTS } from "@/sanity/lib/fontData";
 import { siteSettingsQuery } from "@/sanity/lib/queries";
@@ -235,7 +236,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
       </head>
-      <body>{children}</body>
+      <body>{children}<Analytics /></body>
     </html>
   );
 }
