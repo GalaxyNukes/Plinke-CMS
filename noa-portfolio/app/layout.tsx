@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/next";
 import { client } from "@/sanity/sanity.client";
 import { buildGoogleFontsUrl, DISPLAY_FONTS, BODY_FONTS } from "@/sanity/lib/fontData";
 import { siteSettingsQuery } from "@/sanity/lib/queries";
@@ -236,7 +235,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
       </head>
-      <body>{children}<Analytics /></body>
+      <body>
+        {children}
+        {/* Google Analytics GA4 */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-M32L0JPMPL" />
+        <script dangerouslySetInnerHTML={{ __html: `
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-M32L0JPMPL');
+        `}} />
+      </body>
     </html>
   );
 }
